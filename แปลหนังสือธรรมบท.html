@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>ชั้นหนังสือธรรมบท – มือถือ 4 คอลัมน์ (AI Pali Tutor)</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+  :root{
+    /* mobile-first: 4 คอลัมน์ */
+    --cols:4;
+    --gap:8px;
+    --bg:#778899;
+    --ink:#eef3fb;
+    --muted:#cfd6e2;
+    --wood:#c28a52; --wood2:#9b6a3d;
+    --badge:#e11d48;
+    --shadow:0 12px 28px -18px rgba(0,0,0,.55);
+  }
+  @media (min-width: 600px){ :root{ --cols:4; --gap:12px } }
+  @media (min-width: 900px){ :root{ --cols:4; --gap:16px } }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right)
+             calc(14px + env(safe-area-inset-bottom)) env(safe-area-inset-left);
+    background:
+      radial-gradient(1000px 500px at 80% -10%, rgba(255,255,255,.06), transparent 60%),
+      radial-gradient(800px 500px at 10% 110%, rgba(255,255,255,.04), transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    font-family:"Sarabun",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wrap{max-width:1000px; margin:0 auto; padding:10px 10px 80px} /* เพิ่ม padding ล่างเผื่อปุ่มแชท */
+  h1{margin:0 0 4px; font-size:clamp(18px,4vw,28px)}
+  p.lead{margin:0 0 10px; color:var(--muted); font-size:13px}
+
+  /* ===== เลย์เอาต์แนวตั้ง แบ่งเป็น "แถวชั้นไม้" ทีละ 4 เล่ม ===== */
+  .rows{display:flex; flex-direction:column; gap:22px; margin-top:6px}
+  .shelf-row{
+    position:relative;
+    padding-bottom:18px; /* เผื่อพื้นที่ให้ชั้นไม้ */
+  }
+  .row-grid{
+    display:grid;
+    grid-template-columns: repeat(var(--cols), 1fr);
+    gap: var(--gap);
+  }
+
+  /* ชั้นไม้ (ต่อแถว ไม่เลื่อนข้าง) */
+  .shelf-board{
+    position:absolute; left:0; right:0; bottom:0; height:16px; z-index:1;
+    background:
+      linear-gradient(#0004,#0000) top/100% 2px no-repeat,
+      linear-gradient(180deg,#fff8 0,#0004 100%) 0 0/100% 100%,
+      linear-gradient(180deg,var(--wood) 0,var(--wood2) 100%);
+    border-radius:8px;
+    box-shadow:0 6px 16px rgba(0,0,0,.5), inset 0 0 0 1px rgba(0,0,0,.12);
+  }
+
+  /* การ์ดหนังสือ */
+  .book{ text-align:center; z-index:2 } /* ให้อยู่เหนือชั้นไม้ */
+  .cover{
+    display:block; position:relative; width:100%; aspect-ratio:3/4; border-radius:10px; overflow:hidden;
+    background:#fff;
+    box-shadow:0 12px 20px -16px rgba(0,0,0,.75), inset 0 0 0 1px rgba(255,255,255,.06);
+    transform:translateY(0);
+    transition:transform .16s ease, box-shadow .16s ease;
+  }
+  .cover img{width:100%; height:100%; object-fit:cover; display:block}
+  .cover::after{content:""; position:absolute; left:0; top:0; bottom:0; width:5px; background:linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.05))}
+  .cover:where(:hover,:focus-visible){ transform:translateY(-2px); box-shadow:0 18px 26px -18px rgba(0,0,0,.85), inset 0 0 0 1px rgba(255,255,255,.08) }
+
+  .badge{
+    position:absolute; left:-6px; top:6px; padding:2px 8px 3px; font-size:10px; font-weight:700; letter-spacing:.35px;
+    background:var(--badge); color:#fff; border-radius:999px; transform:rotate(-8deg); box-shadow:0 8px 14px -12px rgba(225,29,72,.9);
+  }
+  .title{
+    margin-top:5px; font-size:11px; line-height:1.25; color:#eaeef5;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
+    text-shadow:0 1px 0 rgba(0,0,0,.4);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .cover{ transition:none }
+  }
+
+  footer {
+    text-align: center;
+    margin-top: 40px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* ===== CSS ของ Chatbot UI (Dhamma Theme) ===== */
+  .chat-bubble::before { content: ''; position: absolute; width: 0; height: 0; border-style: solid; }
+  .chat-bubble-user::before {
+    border-width: 0 12px 12px 12px; border-color: transparent transparent #d97706 transparent; /* สีจีวร/ส้ม */
+    top: -10px; right: 12px;
+  }
+  .chat-bubble-model::before {
+    border-width: 0 12px 12px 12px; border-color: transparent transparent #e5e7eb transparent;
+    top: -10px; left: 12px;
+  }
+  .gemini-thinking-bar {
+    position: relative; width: 100%; height: 4px; background-color: #e0e0e0;
+    border-radius: 2px; overflow: hidden;
+  }
+  .gemini-thinking-bar::before {
+    content: ''; position: absolute; top: 0; left: 0; height: 100%; width: 100%;
+    background: linear-gradient(90deg, #d97706, #fbbf24, #d97706);
+    background-size: 200% 100%; animation: thinking-gradient 2s linear infinite;
+  }
+  @keyframes thinking-gradient { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  
+  #fab-chat-toggle {
+    position: fixed; bottom: 25px; right: 25px;
+    width: 60px; height: 60px;
+    background-color: #d97706; /* สีส้มทอง */
+    color: white;
+    border: none; border-radius: 50%;
+    font-size: 28px; line-height: 60px; text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    cursor: pointer; z-index: 998;
+    transition: transform 0.2s, opacity 0.3s;
+    font-family: 'Sarabun', sans-serif;
+  }
+  #fab-chat-toggle:hover { transform: scale(1.05); background-color: #b45309; }
+  
+  #chatbot-modal {
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    z-index: 1000; transition: opacity 0.3s, transform 0.3s;
+    opacity: 1; transform: translateY(0); pointer-events: auto;
+  }
+  #chatbot-modal.chatbot-hidden {
+    opacity: 0; transform: translateY(100%); pointer-events: none;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+   <h1>ชั้นหนังสือ</h1>
+    <p>แปลธรรมบทบาลี</p>
+    <p class="lead"> </p>
+
+    <div class="rows" id="rows"></div>
+    
+    <footer>
+      <p class="footer-links">
+        © 2025 Crow Studio |
+        <a href="https://sites.google.com/view/privacy-policy-pdpa-crow-studi/%E0%B8%AB%E0%B8%99%E0%B8%B2%E0%B9%81%E0%B8%A3%E0%B8%81" style="color: #cfd6e2;">นโยบายความเป็นส่วนตัว</a> |
+        <a href="ลิงก์ข้อตกลง" style="color: #cfd6e2;">ข้อตกลงการใช้งาน</a>
+      </p>
+    </footer>
+  </div>
+
+  <button id="fab-chat-toggle" title="ถาม AI บาลี">Ai</button>
+
+  <div id="chatbot-modal" class="chatbot-hidden">
+    <div class="flex flex-col h-screen bg-gray-100">
+      <header class="bg-[#1e293b] text-white p-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl text-[#fbbf24]">☸️</span>
+            <h1 class="text-lg font-bold font-sans text-white m-0">AI ช่วยแปลบาลี</h1>
+        </div>
+        <div>
+          <button id="new-chat-btn" class="bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-1 px-3 rounded mr-2 text-sm">
+            เริ่มใหม่
+          </button>
+          <button id="chatbot-close-btn" class="bg-gray-700 hover:bg-gray-900 text-white font-bold py-1 px-3 rounded text-sm">
+            ปิด
+          </button>
+        </div>
+      </header>
+
+      <main id="chat-history" class="flex-1 overflow-y-auto p-4 space-y-4 bg-orange-50">
+        <div class="flex items-start space-x-2">
+          <span class="text-2xl">🤖</span>
+          <div class="chat-bubble chat-bubble-model bg-white text-gray-800 p-3 rounded-lg max-w-lg relative border border-gray-200 shadow-sm">
+            <p>เจริญพร... อาตมาคือ AI ผู้ช่วยแปลธรรมบทและอธิบายบาลีไวยากรณ์ ติดขัดประโยคไหน หรือสงสัยศัพท์ใด สอบถามได้เลย</p>
+          </div>
+        </div>
+      </main>
+
+      <div id="thinking-indicator" class="p-4 hidden bg-orange-50">
+        <div class="flex items-center space-x-2">
+          <span class="text-2xl">🤖</span>
+          <div class="chat-bubble chat-bubble-model bg-white text-gray-800 p-3 rounded-lg max-w-lg relative border border-gray-200">
+            <div class="gemini-thinking-bar"></div>
+          </div>
+        </div>
+      </div>
+
+      <footer class="bg-white p-3 shadow-inner border-t border-gray-200 m-0 w-full max-w-full text-black">
+        <div class="flex space-x-2">
+          <input id="user-input" type="text" placeholder="พิมพ์ประโยคบาลี หรือคำถาม..." class="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#d97706] font-sans text-base text-black">
+          <button id="send-btn" class="bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-2 px-4 rounded-xl shadow-sm">
+            ส่ง
+          </button>
+        </div>
+      </footer>
+    </div>
+  </div>
+
+<script>
+/* ====== ส่วนโค้ดชั้นหนังสือ (คงเดิม) ====== */
+const ITEMS = [
+  { title:"หลักการแปล ปธ.123", cover:"https://drive.google.com/file/d/1d9GYTR6uBSWpFhBU7V4vtq8OQXhPXwK0/view?usp=drive_link", url:"https://drive.google.com/file/d/1WPNdBLFw6NGsqlXOMN8xXVvqdbD_oIe2/view?usp=drive_link", badge:"NEW" },
+  { title:"คู่มือปธ.7-8-9", cover:"https://drive.google.com/file/d/1Dw5XqDVcZEcJsZSwyP-0OxRLmmjqBVEz/view?usp=sharing", url:"https://drive.google.com/file/d/1siCN8iqSeFpPfLTXnYiP5An_6KrhPoV_/view?usp=drive_link" },
+  { title:"แปลยกศัพท์ เล่ม 1", cover:"https://drive.google.com/file/d/1IlRjEGv0DTDNvtnHvDWYKXrKYDuTrzco/view?usp=drive_link", url:"https://drive.google.com/file/d/1S1Blbcah80iv66Bf_bjx5Zri8SU2U8tJ/view?usp=drive_link" },
+  { title:"แปลยกศัพท์ เล่ม 2", cover:"https://drive.google.com/file/d/1zM6p3By6Ywo01n-K8RNThAcBB3m1EadH/view?usp=drive_link", url:"https://drive.google.com/file/d/1Tuxk0qaTSBdL9qcuAWbB1NvaP3o2r6eo/view?usp=drive_link" },
+  { title:"แปลยกศัพท์ เล่ม 3", cover:"https://drive.google.com/file/d/1D4SsdTRqF-HcwCOBNI3B5a7GhfUa1BAE/view?usp=drive_link", url:"https://drive.google.com/file/d/1TWAYqopuDe0DZtIGiOdSDFn965PGW1mT/view?usp=drive_link" },
+  { title:"แปลยกศัพท์ เล่ม 4", cover:"https://drive.google.com/file/d/1L-a6UOjrFpPGXeXaPkzh5t0ye8oKBLAq/view?usp=drive_link", url:"https://drive.google.com/file/d/12vyp1ZpSzlB44AgX6CCW6eSS88m7v9Go/view?usp=drive_link" },
+  { title:"แปลยกศัพท์ เล่ม 5", cover:"https://drive.google.com/file/d/1tJvgwQMKUx1cFLHNhgmhehgKTJDJ7gkZ/view?usp=drive_link", url:"https://drive.google.com/file/d/1jD9lgFtgF26AQULakPlq-N1e4qICJxaE/view?usp=drive_link" },
+  { title:"แปลยกศัพท์ เล่ม 6", cover:"https://drive.google.com/file/d/11ZRIVwLLUrt1o0LNFeoA-d0eraniaiFM/view?usp=drive_link", url:"https://drive.google.com/file/d/1i31bsZhuytUkNNJaDHplZgjhRjaauX9p/view?usp=drive_link" },
+  { title:"แปลยกศัพท์ เล่ม 7", cover:"https://drive.google.com/file/d/1VaHnV3bkGtHQMR3AUIvI_v1OsFK7_7tz/view?usp=drive_link", url:"https://drive.google.com/file/d/1ca3RyAUHlFBfaFU9KQgoYzQmr4XR-0qY/view?usp=drive_link" },
+  { title:"แปลยกศัพท์ เล่ม 8", cover:"https://drive.google.com/file/d/13G1cM_A-0TwSLcbMQu6X3diLYH0hFsbF/view?usp=drive_link", url:"https://drive.google.com/file/d/1doKMBszW2yEM6urFDQBXPrp1obCB8OkF/view?usp=drive_link" },
+  { title:"ธรรมบท 2 ภาษา เล่ม 1", cover:"https://drive.google.com/file/d/1nMnPeZ6ZjwhEpIbgs2mldaAnbO7h5Dsv/view?usp=drive_link", url:"https://drive.google.com/file/d/1ds9_lRvaKd3fdR6an_8Zbh2dRPJhOEBn/view?usp=drive_link" },
+  { title:"ธรรมบท 2 ภาษาเล่ม 2", cover:"https://drive.google.com/file/d/16dF_kBQ-yBeYowoMRwBUR3_ZnBEH4TRo/view?usp=drive_link", url:"https://drive.google.com/file/d/13vMcmi6rCOsl4j7-hqTXtsBT5FRPI_IQ/view?usp=drive_link" },
+  { title:"ธรรมบท 2 ภาษาเล่ม 3", cover:"https://drive.google.com/file/d/1M-q50kV8PkSKVF6BX5qAb_v9-Dvg1sUb/view?usp=drive_link", url:"https://drive.google.com/file/d/1E75hb1bgqMv5HTeovm35gUQfd3Alo-7A/view?usp=drive_link" },
+  { title:"ธรรมบท 2 ภาษาเล่ม 4", cover:"https://drive.google.com/file/d/1c1DLxaxaoBGlwHFpf-hSBTFYO_p3rfA9/view?usp=drive_link", url:"https://drive.google.com/file/d/1YQNCrFhc9Xbkc00khnXlFBzZ61fRuY2J/view?usp=drive_link" },
+  { title:"ธรรมบท 2 ภาษาเล่ม 5", cover:"https://drive.google.com/file/d/1HrX3VncIJYcUGF6ZEh5KStGaxFPvmvLA/view?usp=drive_link", url:"https://drive.google.com/file/d/1TjkuSSO41vnTeAdZzLLRjewtTkd_Xcqk/view?usp=drive_link" },
+  { title:"ธรรมบท 2 ภาษาเล่ม 6", cover:"https://drive.google.com/file/d/1rLMH606Wxi20y8f0eGeFEJervQEnOclB/view?usp=drive_link", url:"https://drive.google.com/file/d/1fBXpGoapfL9u074lwH3Iva8SE-0SbsB7/view?usp=drive_link" },
+  { title:"ธรรมบท 2 ภาษาเล่ม 7", cover:"https://drive.google.com/file/d/1LOouEb4YdnPMWsJGMzOe7peswmhodKtY/view?usp=drive_link", url:"https://drive.google.com/file/d/1OMweF7D36z7WNCR1yN3Pyr9CULs4SEU7/view?usp=drive_link" },
+  { title:"ธรรมบท 2 ภาษาเล่ม 8", cover:"https://drive.google.com/file/d/189Lb9sGxtU59maTnJEYBwphIGXLcRrTF/view?usp=drive_link", url:"https://drive.google.com/file/d/1Teiubf6thdm532fGcTy22PclnCava6jB/view?usp=drive_link" },
+];
+
+function extractDriveId(v){
+  if(!v) return "";
+  if(/^[A-Za-z0-9_-]{20,}$/.test(v)) return v;
+  const m1 = v.match(/\/file\/d\/([A-Za-z0-9_-]{20,})/);
+  if(m1) return m1[1];
+  const m2 = v.match(/[?&]id=([A-Za-z0-9_-]{20,})/);
+  if(m2) return m2[1];
+  return "";
+}
+
+function toDriveImage(v, size=1000){
+  const id = extractDriveId(v);
+  if(id) return `https://drive.google.com/thumbnail?id=${id}&sz=w${size}`;
+  return v || "";
+}
+
+function toDriveView(v){
+  const id = extractDriveId(v);
+  if(id) return `https://drive.google.com/file/d/${id}/view`;
+  if(typeof v === "string") return v.replace(/\/preview(\?.*)?$/,"/view");
+  return "";
+}
+
+function createBook(b){
+  const el = document.createElement('div');
+  el.className = 'book';
+  const a  = document.createElement('a');
+  a.className = 'cover';
+  a.href = toDriveView(b.url) || '#';
+  a.target = '_blank';
+  a.rel = 'noopener noreferrer';
+  a.innerHTML = `${b.badge?`<span class="badge">${b.badge}</span>`:''}
+    <img loading="lazy" decoding="async" alt="${b.title}">`;
+  a.querySelector('img').src = toDriveImage(b.cover);
+  const t = document.createElement('div');
+  t.className='title';
+  t.textContent = b.title;
+  el.appendChild(a);
+  el.appendChild(t);
+  return el;
+}
+
+const rowsEl = document.getElementById('rows');
+const COLS = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cols')) || 4;
+
+for(let i=0; i<ITEMS.length; i += COLS){
+  const row = document.createElement('div');
+  row.className = 'shelf-row';
+  const grid = document.createElement('div');
+  grid.className = 'row-grid';
+  ITEMS.slice(i, i+COLS).forEach(b => grid.appendChild(createBook(b)));
+  const board = document.createElement('div');
+  board.className = 'shelf-board';
+  board.setAttribute('aria-hidden','true');
+  row.appendChild(grid);
+  row.appendChild(board);
+  rowsEl.appendChild(row);
+}
+
+/* =========================================
+   ส่วน Chatbot AI (Backend)
+   ========================================= */
+const BACKEND_URL = 'https://us-central1-law-ai-14740.cloudfunctions.net/api/chat';
+
+// System Prompt: ผู้ช่วยแปลธรรมบท/บาลี
+const SYSTEM_PROMPT = {
+    role: "user",
+    parts: [{ text: "System Instruction: คุณคือ AI ผู้ช่วยแปลธรรมบทและบาลีไวยากรณ์ (Pali Translator AI) มีหน้าที่ช่วยนักเรียนบาลีแปลประโยค อธิบายไวยากรณ์ (วิภัตติ, วาจก, ประโยค) และขยายความเนื้อหาในธรรมบท ตอบด้วยภาษาสุภาพ เป็นทางการ (อาจใช้คำว่า 'เจริญพร' แทนสวัสดี) ห้ามตอบเรื่องกฎหมายหรือเรื่องอื่นที่ไม่เกี่ยวกับการเรียนบาลี" }]
+};
+const SYSTEM_ACK = {
+    role: "model",
+    parts: [{ text: "เจริญพร อาตมาพร้อมช่วยเหลือในการแปลธรรมบทและบาลีไวยากรณ์แล้ว" }]
+};
+
+let chatHistory = [SYSTEM_PROMPT, SYSTEM_ACK];
+
+const chatHistoryEl = document.getElementById('chat-history');
+const userInput = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+const newChatBtn = document.getElementById('new-chat-btn');
+const thinkingIndicator = document.getElementById('thinking-indicator');
+
+function addChatBubble(message, isUser = true) {
+    const bubbleType = isUser ? 'user' : 'model';
+    const icon = isUser ? '👤' : '🤖';
+    const bgClass = isUser ? 'bg-[#d97706] text-white' : 'bg-white text-gray-800 border border-gray-200';
+    
+    const wrap = document.createElement('div');
+    wrap.className = `flex items-start space-x-2 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`;
+    
+    const bubble = document.createElement('div');
+    bubble.className = `chat-bubble chat-bubble-${bubbleType} ${bgClass} p-3 rounded-lg max-w-lg relative shadow-sm`;
+    bubble.innerHTML = `<p>${message.replace(/\n/g, '<br>')}</p>`;
+    
+    wrap.innerHTML = `<span class="text-2xl">${icon}</span>`;
+    wrap.appendChild(bubble);
+    
+    chatHistoryEl.appendChild(wrap);
+    chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+}
+
+function addChatError(message) {
+    const w = document.createElement('div');
+    w.className = 'flex justify-center my-2';
+    w.innerHTML = `<span class="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full">${message}</span>`;
+    chatHistoryEl.appendChild(w);
+    chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+}
+
+function setThinking(on) {
+    thinkingIndicator.classList.toggle('hidden', !on);
+    if (on) chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+}
+
+async function handleSend() {
+    const message = (userInput.value || '').trim();
+    if (!message) return;
+
+    addChatBubble(message, true);
+    userInput.value = '';
+    setThinking(true);
+    sendBtn.disabled = true;
+
+    chatHistory.push({ role: "user", parts: [{ text: message }] });
+
+    try {
+        const response = await fetch(BACKEND_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ history: chatHistory }) 
+        });
+
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error || `Server error: ${response.status}`);
+        }
+
+        const data = await response.json(); 
+        const aiReply = data.reply;
+
+        chatHistory.push({ role: "model", parts: [{ text: aiReply }] });
+        setThinking(false);
+        addChatBubble(aiReply, false);
+
+    } catch (err) {
+        console.error("Fetch Error:", err);
+        setThinking(false);
+        addChatError(`เกิดข้อผิดพลาด: ${err.message}`);
+        chatHistory.pop();
+    } finally {
+        sendBtn.disabled = false;
+    }
+}
+
+sendBtn.addEventListener('click', handleSend);
+userInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleSend();
+});
+
+// Reset Chat
+newChatBtn.addEventListener('click', () => {
+    chatHistory = [SYSTEM_PROMPT, SYSTEM_ACK];
+    chatHistoryEl.innerHTML = `
+        <div class="flex items-start space-x-2">
+        <span class="text-2xl">🤖</span>
+        <div class="chat-bubble chat-bubble-model bg-white text-gray-800 p-3 rounded-lg max-w-lg relative border border-gray-200 shadow-sm">
+            <p>เจริญพร เริ่มบทสนทนาธรรมใหม่ได้เลย</p>
+        </div>
+        </div>`;
+    userInput.value = '';
+    setThinking(false);
+});
+
+// Modal Control
+const fabToggle = document.getElementById('fab-chat-toggle');
+const chatModal = document.getElementById('chatbot-modal');
+const chatbotCloseBtn = document.getElementById('chatbot-close-btn');
+
+fabToggle.addEventListener('click', () => {
+    chatModal.classList.remove('chatbot-hidden');
+    fabToggle.style.opacity = '0';
+});
+chatbotCloseBtn.addEventListener('click', () => {
+    chatModal.classList.add('chatbot-hidden');
+    fabToggle.style.opacity = '1';
+});
+</script>
+
+</body>
+</html>
