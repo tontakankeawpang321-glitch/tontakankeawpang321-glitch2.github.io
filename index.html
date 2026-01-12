@@ -295,8 +295,8 @@ for(let i=0; i<ITEMS.length; i += COLS){
 /* =========================================
    ส่วน Chatbot AI (Backend)
    ========================================= */
-const BACKEND_URL = 'https://us-central1-law-ai-14740.cloudfunctions.net/api/chat';
-
+// ✅ เปลี่ยนจาก '/api/chat' เป็นลิงก์เต็มของ Vercel
+const BACKEND_URL = 'https://kodmai2025-github-io.vercel.app/api/chat';
 // System Prompt: ผู้ช่วยแปลธรรมบท/บาลี
 const SYSTEM_PROMPT = {
     role: "user",
