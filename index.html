@@ -38,9 +38,38 @@
     font-family:"Sarabun",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Thai",sans-serif;
     -webkit-tap-highlight-color: transparent;
   }
-  .wrap{max-width:1000px; margin:0 auto; padding:10px 10px 80px} /* เพิ่ม padding ล่างเผื่อปุ่มแชท */
+  .wrap{max-width:1000px; margin:0 auto; padding:10px 10px 80px}
   h1{margin:0 0 4px; font-size:clamp(18px,4vw,28px)}
   p.lead{margin:0 0 10px; color:var(--muted); font-size:13px}
+
+  /* Search Container Style */
+  .search-container {
+    margin: 15px 0 25px;
+    position: relative;
+    display: flex;
+    gap: 8px;
+  }
+  .search-input {
+    width: 100%;
+    padding: 10px 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-family: inherit;
+    font-size: 14px;
+    outline: none;
+    transition: all 0.2s;
+    backdrop-filter: blur(5px);
+  }
+  .search-input:focus {
+    background: rgba(255,255,255,0.2);
+    border-color: #fbbf24;
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+  }
+  .search-input::placeholder {
+    color: var(--muted);
+  }
 
   /* ===== เลย์เอาต์แนวตั้ง แบ่งเป็น "แถวชั้นไม้" ทีละ 4 เล่ม ===== */
   .rows{display:flex; flex-direction:column; gap:22px; margin-top:6px}
@@ -54,7 +83,7 @@
     gap: var(--gap);
   }
 
-  /* ชั้นไม้ (ต่อแถว ไม่เลื่อนข้าง) */
+  /* ชั้นไม้ */
   .shelf-board{
     position:absolute; left:0; right:0; bottom:0; height:16px; z-index:1;
     background:
@@ -66,7 +95,7 @@
   }
 
   /* การ์ดหนังสือ */
-  .book{ text-align:center; z-index:2 } /* ให้อยู่เหนือชั้นไม้ */
+  .book{ text-align:center; z-index:2 }
   .cover{
     display:block; position:relative; width:100%; aspect-ratio:3/4; border-radius:10px; overflow:hidden;
     background:#fff;
@@ -99,10 +128,10 @@
     color: var(--muted);
   }
 
-  /* ===== CSS ของ Chatbot UI (Dhamma Theme) ===== */
+  /* ===== Chatbot UI ===== */
   .chat-bubble::before { content: ''; position: absolute; width: 0; height: 0; border-style: solid; }
   .chat-bubble-user::before {
-    border-width: 0 12px 12px 12px; border-color: transparent transparent #d97706 transparent; /* สีจีวร/ส้ม */
+    border-width: 0 12px 12px 12px; border-color: transparent transparent #d97706 transparent;
     top: -10px; right: 12px;
   }
   .chat-bubble-model::before {
@@ -123,10 +152,10 @@
   #fab-chat-toggle {
     position: fixed; bottom: 25px; right: 25px;
     width: 60px; height: 60px;
-    background-color: #d97706; /* สีส้มทอง */
+    background-color: #d97706;
     color: white;
     border: none; border-radius: 50%;
-    font-size: 28px; line-height: 60px; text-align: center;
+    font-size: 24px; line-height: 60px; text-align: center;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     cursor: pointer; z-index: 998;
     transition: transform 0.2s, opacity 0.3s;
@@ -142,13 +171,24 @@
   #chatbot-modal.chatbot-hidden {
     opacity: 0; transform: translateY(100%); pointer-events: none;
   }
+  .no-results {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+    font-size: 14px;
+    font-style: italic;
+  }
 </style>
 </head>
 <body>
   <div class="wrap">
-   <h1>ชั้นหนังสือ</h1>
+    <h1>ชั้นหนังสือ</h1>
     <p>แปลธรรมบทบาลี</p>
-    <p class="lead"> </p>
+
+    <!-- Search Section -->
+    <div class="search-container">
+      <input type="text" id="book-search" class="search-input" placeholder="ค้นหาชื่อหนังสือหรือเล่มที่...">
+    </div>
 
     <div class="rows" id="rows"></div>
     
@@ -156,7 +196,7 @@
       <p class="footer-links">
         © 2025 Crow Studio |
         <a href="https://sites.google.com/view/privacy-policy-pdpa-crow-studi/%E0%B8%AB%E0%B8%99%E0%B8%B2%E0%B9%81%E0%B8%A3%E0%B8%81" style="color: #cfd6e2;">นโยบายความเป็นส่วนตัว</a> |
-        <a href="ลิงก์ข้อตกลง" style="color: #cfd6e2;">ข้อตกลงการใช้งาน</a>
+        <a href="#" style="color: #cfd6e2;">ข้อตกลงการใช้งาน</a>
       </p>
     </footer>
   </div>
@@ -171,12 +211,8 @@
             <h1 class="text-lg font-bold font-sans text-white m-0">AI ช่วยแปลบาลี</h1>
         </div>
         <div>
-          <button id="new-chat-btn" class="bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-1 px-3 rounded mr-2 text-sm">
-            เริ่มใหม่
-          </button>
-          <button id="chatbot-close-btn" class="bg-gray-700 hover:bg-gray-900 text-white font-bold py-1 px-3 rounded text-sm">
-            ปิด
-          </button>
+          <button id="new-chat-btn" class="bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-1 px-3 rounded mr-2 text-sm">เริ่มใหม่</button>
+          <button id="chatbot-close-btn" class="bg-gray-700 hover:bg-gray-900 text-white font-bold py-1 px-3 rounded text-sm">ปิด</button>
         </div>
       </header>
 
@@ -201,36 +237,51 @@
       <footer class="bg-white p-3 shadow-inner border-t border-gray-200 m-0 w-full max-w-full text-black">
         <div class="flex space-x-2">
           <input id="user-input" type="text" placeholder="พิมพ์ประโยคบาลี หรือคำถาม..." class="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#d97706] font-sans text-base text-black">
-          <button id="send-btn" class="bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-2 px-4 rounded-xl shadow-sm">
-            ส่ง
-          </button>
+          <button id="send-btn" class="bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-2 px-4 rounded-xl shadow-sm">ส่ง</button>
         </div>
       </footer>
     </div>
   </div>
 
 <script>
-/* ====== ส่วนโค้ดชั้นหนังสือ (คงเดิม) ====== */
+/* ====== ส่วนโค้ดชั้นหนังสือ ====== */
 const ITEMS = [
-  { title:"บาลีไวยากรณ์", cover:"https://drive.google.com/file/d/1irLISA-4UUXIolOwTwWzpRGcnV11XyUX/view?usp=drive_link", url:"https://drive.google.com/file/d/1Hqa08ZjnR0ahz376LMN9qSZ021BPkMrT/view?usp=drive_link", badge:"NEW" },
-  { title:"หลักการแปล ปธ.123", cover:"https://drive.google.com/file/d/1d9GYTR6uBSWpFhBU7V4vtq8OQXhPXwK0/view?usp=drive_link", url:"https://drive.google.com/file/d/1WPNdBLFw6NGsqlXOMN8xXVvqdbD_oIe2/view?usp=drive_link", badge:"NEW" },
-  { title:"คู่มือปธ.7-8-9", cover:"https://drive.google.com/file/d/1Dw5XqDVcZEcJsZSwyP-0OxRLmmjqBVEz/view?usp=sharing", url:"https://drive.google.com/file/d/1siCN8iqSeFpPfLTXnYiP5An_6KrhPoV_/view?usp=drive_link" },
-  { title:"แปลยกศัพท์ เล่ม 1", cover:"https://drive.google.com/file/d/1IlRjEGv0DTDNvtnHvDWYKXrKYDuTrzco/view?usp=drive_link", url:"https://drive.google.com/file/d/1S1Blbcah80iv66Bf_bjx5Zri8SU2U8tJ/view?usp=drive_link" },
-  { title:"แปลยกศัพท์ เล่ม 2", cover:"https://drive.google.com/file/d/1zM6p3By6Ywo01n-K8RNThAcBB3m1EadH/view?usp=drive_link", url:"https://drive.google.com/file/d/1Tuxk0qaTSBdL9qcuAWbB1NvaP3o2r6eo/view?usp=drive_link" },
-  { title:"แปลยกศัพท์ เล่ม 3", cover:"https://drive.google.com/file/d/1D4SsdTRqF-HcwCOBNI3B5a7GhfUa1BAE/view?usp=drive_link", url:"https://drive.google.com/file/d/1TWAYqopuDe0DZtIGiOdSDFn965PGW1mT/view?usp=drive_link" },
-  { title:"แปลยกศัพท์ เล่ม 4", cover:"https://drive.google.com/file/d/1L-a6UOjrFpPGXeXaPkzh5t0ye8oKBLAq/view?usp=drive_link", url:"https://drive.google.com/file/d/12vyp1ZpSzlB44AgX6CCW6eSS88m7v9Go/view?usp=drive_link" },
-  { title:"แปลยกศัพท์ เล่ม 5", cover:"https://drive.google.com/file/d/1tJvgwQMKUx1cFLHNhgmhehgKTJDJ7gkZ/view?usp=drive_link", url:"https://drive.google.com/file/d/1jD9lgFtgF26AQULakPlq-N1e4qICJxaE/view?usp=drive_link" },
-  { title:"แปลยกศัพท์ เล่ม 6", cover:"https://drive.google.com/file/d/11ZRIVwLLUrt1o0LNFeoA-d0eraniaiFM/view?usp=drive_link", url:"https://drive.google.com/file/d/1i31bsZhuytUkNNJaDHplZgjhRjaauX9p/view?usp=drive_link" },
-  { title:"แปลยกศัพท์ เล่ม 7", cover:"https://drive.google.com/file/d/1VaHnV3bkGtHQMR3AUIvI_v1OsFK7_7tz/view?usp=drive_link", url:"https://drive.google.com/file/d/1ca3RyAUHlFBfaFU9KQgoYzQmr4XR-0qY/view?usp=drive_link" },
-  { title:"แปลยกศัพท์ เล่ม 8", cover:"https://drive.google.com/file/d/13G1cM_A-0TwSLcbMQu6X3diLYH0hFsbF/view?usp=drive_link", url:"https://drive.google.com/file/d/1doKMBszW2yEM6urFDQBXPrp1obCB8OkF/view?usp=drive_link" },
-  { title:"ธรรมบท 2 ภาษา เล่ม 1", cover:"https://drive.google.com/file/d/1nMnPeZ6ZjwhEpIbgs2mldaAnbO7h5Dsv/view?usp=drive_link", url:"https://drive.google.com/file/d/1ds9_lRvaKd3fdR6an_8Zbh2dRPJhOEBn/view?usp=drive_link" },
-  { title:"ธรรมบท 2 ภาษาเล่ม 2", cover:"https://drive.google.com/file/d/16dF_kBQ-yBeYowoMRwBUR3_ZnBEH4TRo/view?usp=drive_link", url:"https://drive.google.com/file/d/13vMcmi6rCOsl4j7-hqTXtsBT5FRPI_IQ/view?usp=drive_link" },
-  { title:"ธรรมบท 2 ภาษาเล่ม 3", cover:"https://drive.google.com/file/d/1M-q50kV8PkSKVF6BX5qAb_v9-Dvg1sUb/view?usp=drive_link", url:"https://drive.google.com/file/d/1E75hb1bgqMv5HTeovm35gUQfd3Alo-7A/view?usp=drive_link" },
-  { title:"ธรรมบท 2 ภาษาเล่ม 4", cover:"https://drive.google.com/file/d/1c1DLxaxaoBGlwHFpf-hSBTFYO_p3rfA9/view?usp=drive_link", url:"https://drive.google.com/file/d/1YQNCrFhc9Xbkc00khnXlFBzZ61fRuY2J/view?usp=drive_link" },
-  { title:"ธรรมบท 2 ภาษาเล่ม 5", cover:"https://drive.google.com/file/d/1HrX3VncIJYcUGF6ZEh5KStGaxFPvmvLA/view?usp=drive_link", url:"https://drive.google.com/file/d/1TjkuSSO41vnTeAdZzLLRjewtTkd_Xcqk/view?usp=drive_link" },
-  { title:"ธรรมบท 2 ภาษาเล่ม 6", cover:"https://drive.google.com/file/d/1rLMH606Wxi20y8f0eGeFEJervQEnOclB/view?usp=drive_link", url:"https://drive.google.com/file/d/1fBXpGoapfL9u074lwH3Iva8SE-0SbsB7/view?usp=drive_link" },
-  { title:"ธรรมบท 2 ภาษาเล่ม 7", cover:"https://drive.google.com/file/d/1LOouEb4YdnPMWsJGMzOe7peswmhodKtY/view?usp=drive_link", url:"https://drive.google.com/file/d/1OMweF7D36z7WNCR1yN3Pyr9CULs4SEU7/view?usp=drive_link" },
-  { title:"ธรรมบท 2 ภาษาเล่ม 8", cover:"https://drive.google.com/file/d/189Lb9sGxtU59maTnJEYBwphIGXLcRrTF/view?usp=drive_link", url:"https://drive.google.com/file/d/1Teiubf6thdm532fGcTy22PclnCava6jB/view?usp=drive_link" },
+  { title:"บาลีไวยากรณ์", cover:"https://drive.google.com/file/d/1irLISA-4UUXIolOwTwWzpRGcnV11XyUX/view?usp=drive_link",  url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/pali01/pali01.html", badge:"NEW"},
+  { title:"หลักการแปล ปธ.123", cover:"https://drive.google.com/file/d/1d9GYTR6uBSWpFhBU7V4vtq8OQXhPXwK0/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p1/index.html", badge:"NEW"},
+  { title:"คู่มือปธ.4-9", cover:"https://drive.google.com/file/d/1Dw5XqDVcZEcJsZSwyP-0OxRLmmjqBVEz/view?usp=sharing", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/kuhand49/kuma456.html" },
+  { title:"คู่มือปธ.7-8-9", cover:"https://drive.google.com/file/d/1Dw5XqDVcZEcJsZSwyP-0OxRLmmjqBVEz/view?usp=sharing", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/kuhand789/index.html" },
+    { title:"ปฐโม ภาโค เล่ม 1", cover:"https://drive.google.com/file/d/1ts_hJBfBalC5GKIX9IygI6qam1xMtcTM/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p1/index.html" },
+    { title:"ทุติโย ภาโค เล่ม 2 ", cover:"https://drive.google.com/file/d/1iXuNKdwcD21N2p5Wrq7lfWjCFdzSD_zg/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p2/index.html" },
+  { title:"ตติโย ภาโค เล่ม 3 ", cover:"https://drive.google.com/file/d/1erauk3QUXv3XxEk5HQpxLs_qDHveuG1b/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p3/index.html" },
+  { title:"จตุตโถ ภาโค เล่ม 4", cover:"https://drive.google.com/file/d/1DfM5K58t3IdQjhv6ZlSul9wb-g1XonP2/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p4/index.html" },
+  { title:"ปัญจโม ภาโค เล่ม 5", cover:"https://drive.google.com/file/d/1TKSiKNqnkqRCvYVjOLDOC36Ds-qe1LNn/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p5/index.html" },
+  { title:"ฉัฏโฐ ภาโค เล่ม 6", cover:"https://drive.google.com/file/d/1-BhX81mosB9XktZsCIrS2V2m0dpYumB0/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p6/index.html" },
+  { title:"สัตตโม ภาโค เล่ม 7", cover:"https://drive.google.com/file/d/1KdTTUF2a1Z8vpZ9fAGKbiMePvoIlsT2r/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p7/index.html" },
+  { title:"อัฏฐโม ภาโค เล่ม 8", cover:"https://drive.google.com/file/d/1h5_k74PpNDlh-tZMXP1-XRGDpqcux8zN/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p8/index.html" },
+  { title:"ภาค 1 แปลอรรถ ", cover:"https://drive.google.com/file/d/1ZJvuNzx2Id6i-gCMgQ2FvCnIi3RbLrly/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/a1/index.html" },
+  { title:"ภาค 2 แปลอรรถ", cover:"https://drive.google.com/file/d/17RpDOc-ThCU4SuLYYx3YzNNtV7WwHQ6I/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/a2/index.html" },
+  { title:"ภาค 3 แปลออรรถ", cover:"https://drive.google.com/file/d/1p4emxA871W6TqWxTmVUsEbkFAG736_hZ/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/a3/index.html" },
+  { title:"ภาค 4 แปลอรรถ", cover:"https://drive.google.com/file/d/1z8tW-cbweJxYimEJ03Y_U11tBVgBVrn4/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/a4/index.html" },
+  { title:"ภาค 5 แปลอรรถ", cover:"https://drive.google.com/file/d/1Pm92WwJZKlXUskXd9LUtFeUjRN2iJ1Au/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/a5/index.html" },
+  { title:"ภาค 6 แปลอรรถ", cover:"https://drive.google.com/file/d/19lu9SRsY6g8DrIy4qWxm1HgM08apmdvA/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/a6/index.html" },
+  { title:"ภาค 7 แปลอรรถ", cover:"https://drive.google.com/file/d/12QWNHdqQHFEH1HxEpHvJNFM5nFHr90DE/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/a7/index.html" },
+  { title:"ภาค 8 แปลอรรถ", cover:"https://drive.google.com/file/d/11SnNGl_nXlk8tfJBdJw25DLKEkfi_KtP/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/a8/index.html" },
+  { title:"แปลยกศัพท์ เล่ม 1", cover:"https://drive.google.com/file/d/1IlRjEGv0DTDNvtnHvDWYKXrKYDuTrzco/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/yoksub1/index.html" },
+  { title:"แปลยกศัพท์ เล่ม 2", cover:"https://drive.google.com/file/d/1zM6p3By6Ywo01n-K8RNThAcBB3m1EadH/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/yoksub2/index.html" },
+  { title:"แปลยกศัพท์ เล่ม 3", cover:"https://drive.google.com/file/d/1D4SsdTRqF-HcwCOBNI3B5a7GhfUa1BAE/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/yoksub3/index.html" },
+  { title:"แปลยกศัพท์ เล่ม 4", cover:"https://drive.google.com/file/d/1L-a6UOjrFpPGXeXaPkzh5t0ye8oKBLAq/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/yoksub4/index.html" },
+  { title:"แปลยกศัพท์ เล่ม 5", cover:"https://drive.google.com/file/d/1tJvgwQMKUx1cFLHNhgmhehgKTJDJ7gkZ/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/yoksub5/index.html" },
+  { title:"แปลยกศัพท์ เล่ม 6", cover:"https://drive.google.com/file/d/11ZRIVwLLUrt1o0LNFeoA-d0eraniaiFM/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.ioyoksub1a6/index.html" },
+  { title:"แปลยกศัพท์ เล่ม 7", cover:"https://drive.google.com/file/d/1VaHnV3bkGtHQMR3AUIvI_v1OsFK7_7tz/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/yoksub7/index.html" },
+  { title:"แปลยกศัพท์ เล่ม 8", cover:"https://drive.google.com/file/d/13G1cM_A-0TwSLcbMQu6X3diLYH0hFsbF/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/yoksub8/index.html" },
+  { title:"ธรรมบท 2 ภาษา เล่ม 1", cover:"https://drive.google.com/file/d/1nMnPeZ6ZjwhEpIbgs2mldaAnbO7h5Dsv/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/twopasa1/index.html" },
+  { title:"ธรรมบท 2 ภาษาเล่ม 2", cover:"https://drive.google.com/file/d/16dF_kBQ-yBeYowoMRwBUR3_ZnBEH4TRo/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/twopasa2/index.html" },
+  { title:"ธรรมบท 2 ภาษาเล่ม 3", cover:"https://drive.google.com/file/d/1M-q50kV8PkSKVF6BX5qAb_v9-Dvg1sUb/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/twopasa3/index.html" },
+  { title:"ธรรมบท 2 ภาษาเล่ม 4", cover:"https://drive.google.com/file/d/1c1DLxaxaoBGlwHFpf-hSBTFYO_p3rfA9/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/twopasa4/index.html" },
+  { title:"ธรรมบท 2 ภาษาเล่ม 5", cover:"https://drive.google.com/file/d/1HrX3VncIJYcUGF6ZEh5KStGaxFPvmvLA/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/twopasa5/index.html" },
+  { title:"ธรรมบท 2 ภาษาเล่ม 6", cover:"https://drive.google.com/file/d/1rLMH606Wxi20y8f0eGeFEJervQEnOclB/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/twopasa6/index.html" },
+  { title:"ธรรมบท 2 ภาษาเล่ม 7", cover:"https://drive.google.com/file/d/1LOouEb4YdnPMWsJGMzOe7peswmhodKtY/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/twopasa7/index.html" },
+  { title:"ธรรมบท 2 ภาษาเล่ม 8", cover:"https://drive.google.com/file/d/189Lb9sGxtU59maTnJEYBwphIGXLcRrTF/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/twopasa8/index.html" },
 ];
 
 function extractDriveId(v){
@@ -276,28 +327,45 @@ function createBook(b){
 }
 
 const rowsEl = document.getElementById('rows');
-const COLS = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cols')) || 4;
+const COLS = 4; // ฟิกซ์ไว้ที่ 4 ตามสไตล์มือถือที่ต้องการ
 
-for(let i=0; i<ITEMS.length; i += COLS){
-  const row = document.createElement('div');
-  row.className = 'shelf-row';
-  const grid = document.createElement('div');
-  grid.className = 'row-grid';
-  ITEMS.slice(i, i+COLS).forEach(b => grid.appendChild(createBook(b)));
-  const board = document.createElement('div');
-  board.className = 'shelf-board';
-  board.setAttribute('aria-hidden','true');
-  row.appendChild(grid);
-  row.appendChild(board);
-  rowsEl.appendChild(row);
+function renderBookshelf(itemsToRender) {
+  rowsEl.innerHTML = '';
+  if(itemsToRender.length === 0) {
+    rowsEl.innerHTML = '<div class="no-results">ไม่พบรายชื่อหนังสือที่ค้นหา</div>';
+    return;
+  }
+
+  for(let i=0; i<itemsToRender.length; i += COLS){
+    const row = document.createElement('div');
+    row.className = 'shelf-row';
+    const grid = document.createElement('div');
+    grid.className = 'row-grid';
+    itemsToRender.slice(i, i+COLS).forEach(b => grid.appendChild(createBook(b)));
+    const board = document.createElement('div');
+    board.className = 'shelf-board';
+    board.setAttribute('aria-hidden','true');
+    row.appendChild(grid);
+    row.appendChild(board);
+    rowsEl.appendChild(row);
+  }
 }
 
+// Initial Render
+renderBookshelf(ITEMS);
+
+// Search Logic
+document.getElementById('book-search').addEventListener('input', function(e) {
+  const query = e.target.value.toLowerCase().trim();
+  const filtered = ITEMS.filter(item => item.title.toLowerCase().includes(query));
+  renderBookshelf(filtered);
+});
+
 /* =========================================
-   ส่วน Chatbot AI (Backend)
+    ส่วน Chatbot AI (Backend)
    ========================================= */
-// ✅ เปลี่ยนจาก '/api/chat' เป็นลิงก์เต็มของ Vercel
-    const BACKEND_URL = 'https://blue-snow-cba8.tontakankeawpang.workers.dev/'; 
-// System Prompt: ผู้ช่วยแปลธรรมบท/บาลี
+const BACKEND_URL = 'https://blue-snow-cba8.tontakankeawpang.workers.dev/'; 
+
 const SYSTEM_PROMPT = {
     role: "user",
     parts: [{ text: "System Instruction: คุณคือ AI ผู้ช่วยแปลธรรมบทและบาลีไวยากรณ์ (Pali Translator AI) มีหน้าที่ช่วยนักเรียนบาลีแปลประโยค อธิบายไวยากรณ์ (วิภัตติ, วาจก, ประโยค) และขยายความเนื้อหาในธรรมบท ตอบด้วยภาษาสุภาพ เป็นทางการ (อาจใช้คำว่า 'เจริญพร' แทนสวัสดี) ห้ามตอบเรื่องกฎหมายหรือเรื่องอื่นที่ไม่เกี่ยวกับการเรียนบาลี" }]
@@ -392,7 +460,6 @@ userInput.addEventListener('keydown', e => {
     if (e.key === 'Enter') handleSend();
 });
 
-// Reset Chat
 newChatBtn.addEventListener('click', () => {
     chatHistory = [SYSTEM_PROMPT, SYSTEM_ACK];
     chatHistoryEl.innerHTML = `
