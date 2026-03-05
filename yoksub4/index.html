@@ -2,7 +2,7 @@
 <html lang="th"><head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ebook Maker Pro (Fix Save Edition)</title>
+<title>Ebook Maker Pro (Auto-Crop &amp; Fix Export)</title>
 <!-- Fonts -->
 <link href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@300;400&amp;family=Chakra+Petch:wght@300;400&amp;family=Itim&amp;family=Kanit:wght@300;400&amp;family=Krub:wght@300;400&amp;family=Mali:wght@300;400&amp;family=Niramit:wght@300;400&amp;family=Pattaya&amp;family=Pridi:wght@300;400&amp;family=Prompt:wght@300;400&amp;family=Sarabun:wght@300;400&amp;family=Sriracha&amp;family=Taviraj:wght@300;400&amp;family=Trirong:wght@300;400&amp;family=Kodchasan:wght@400;600;700&amp;display=swap" rel="stylesheet">
 <!-- JSZip for Exporting -->
@@ -84,10 +84,9 @@ body.light .control-btn{background:#ddd;color:#111; border-color:#ccc;}
   min-width:100vw;
   height:100vh;
   padding:0;
-  /* Use Flexbox with margin:auto for smart centering */
   display: flex;
   flex-direction: column;
-  overflow: auto; /* Allow scrolling inside slide when zoomed */
+  overflow: auto; 
   scroll-snap-align:start;
   position: relative;
 }
@@ -118,13 +117,14 @@ body.vertical-read .nav {
 
 /* Standard Slide Content */
 .slide-content {
-    width: 100%;
-    /* Key fix: margin auto centers it, but allows expansion */
-    margin: auto; 
-    padding: 60px 0 100px 0; 
-    position: relative; 
-    flex-shrink: 0; /* Prevent shrinking in flex container */
-    text-align: center; /* Center inline content like images */
+    width: 90%;
+    margin: auto;
+    padding: 60px 40px 100px 40px;
+    position: relative;
+    flex-shrink: 0;
+    text-align: center;
+    background: #ffffff;
+    border-radius: 8px;
 }
 
 /* Delete Page Button Style */
@@ -151,16 +151,17 @@ body.vertical-read .nav {
 }
 
 /* Image Tools */
-.img-wrapper { position: relative; width: 100%; margin: 0; padding: 0; display: block; }
+.img-wrapper { position: relative; width: 100%; margin: 0; padding: 0; display: block; min-height: 200px; background: rgba(100,100,100,0.1); }
 .slide img { 
     display: block; 
-    width: 100%; /* Fit width */
+    width: 100%; 
     height: auto; 
     margin: 0 auto; 
     object-fit: contain; 
+    transition: opacity 0.3s;
 }
-.img-tools { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; z-index: 50; }
-.tool-btn { background: rgba(0,0,0,0.7); color: white; border: 1px solid rgba(255,255,255,0.5); padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+.img-tools { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; z-index: 50; flex-wrap: wrap; justify-content: flex-end;}
+.tool-btn { background: rgba(0,0,0,0.7); color: white; border: 1px solid rgba(255,255,255,0.5); padding: 6px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: bold;}
 .tool-btn:hover { background: #333; }
 .delete-btn:hover { background: red; }
 .crop-btn:hover { background: #2196F3; }
@@ -190,16 +191,7 @@ body.light .toc-item-wrapper:hover { background: rgba(0,0,0,0.05); }
 body.light .toc-text[contenteditable="true"]:focus { background: white; color: black; }
 
 /* TOC Delete Button */
-.toc-del-btn {
-    margin-left: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    padding: 2px 6px;
-    color: #ff6666;
-    opacity: 0.8;
-    transition: 0.2s;
-    flex-shrink: 0;
-}
+.toc-del-btn { margin-left: 5px; cursor: pointer; font-size: 14px; padding: 2px 6px; color: #ff6666; opacity: 0.8; transition: 0.2s; flex-shrink: 0; }
 .toc-del-btn:hover { opacity: 1; color: #ff0000; transform: scale(1.2); }
 
 /* Modal for Cropping */
@@ -209,8 +201,8 @@ body.light .toc-text[contenteditable="true"]:focus { background: white; color: b
 canvas#cropCanvas { display: block; cursor: crosshair; }
 
 /* Loading Indicator */
-#loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:3000; display:none; flex-direction:column; align-items:center; justify-content:center; color:white; }
-.loader { border: 5px solid #f3f3f3; border-top: 5px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+#loading-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:3000; display:none; flex-direction:column; align-items:center; justify-content:center; color:white; }
+.loader { border: 5px solid #f3f3f3; border-top: 5px solid #2196F3; border-radius: 50%; width: 60px; height: 60px; animation: spin 1s linear infinite; margin-bottom: 20px; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
 .edit-only { display: block; }
@@ -351,913 +343,913 @@ canvas#cropCanvas { display: block; cursor: crosshair; }
 <div class="slider" id="slider"><div class="slide" id="slide-0" data-name="หน้า 1">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-0"><div class="img-wrapper"><img src="images/img_0.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-0"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_0.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-1" data-name="หน้า 2">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-1"><div class="img-wrapper"><img src="images/img_1.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-1"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_1.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-2" data-name="หน้า 3">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-2"><div class="img-wrapper"><img src="images/img_2.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-2"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_2.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-3" data-name="หน้า 4">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-3"><div class="img-wrapper"><img src="images/img_3.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-3"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_3.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-4" data-name="หน้า 5">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-4"><div class="img-wrapper"><img src="images/img_4.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-4"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_4.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-5" data-name="หน้า 6">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-5"><div class="img-wrapper"><img src="images/img_5.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-5"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_5.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-6" data-name="หน้า 7">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-6"><div class="img-wrapper"><img src="images/img_6.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-6"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_6.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-7" data-name="หน้า 8">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-7"><div class="img-wrapper"><img src="images/img_7.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-7"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_7.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-8" data-name="หน้า 9">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-8"><div class="img-wrapper"><img src="images/img_8.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-8"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_8.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-9" data-name="หน้า 10">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-9"><div class="img-wrapper"><img src="images/img_9.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-9"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_9.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-10" data-name="หน้า 11">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-10"><div class="img-wrapper"><img src="images/img_10.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-10"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_10.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-11" data-name="หน้า 12">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-11"><div class="img-wrapper"><img src="images/img_11.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-11"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_11.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-12" data-name="หน้า 13">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-12"><div class="img-wrapper"><img src="images/img_12.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-12"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_12.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-13" data-name="หน้า 14">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-13"><div class="img-wrapper"><img src="images/img_13.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-13"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_13.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-14" data-name="หน้า 15">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-14"><div class="img-wrapper"><img src="images/img_14.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-14"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_14.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-15" data-name="หน้า 16">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-15"><div class="img-wrapper"><img src="images/img_15.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-15"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_15.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-16" data-name="หน้า 17">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-16"><div class="img-wrapper"><img src="images/img_16.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-16"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_16.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-17" data-name="หน้า 18">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-17"><div class="img-wrapper"><img src="images/img_17.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-17"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_17.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-18" data-name="หน้า 19">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-18"><div class="img-wrapper"><img src="images/img_18.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-18"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_18.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-19" data-name="หน้า 20">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-19"><div class="img-wrapper"><img src="images/img_19.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-19"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_19.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-20" data-name="หน้า 21">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-20"><div class="img-wrapper"><img src="images/img_20.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-20"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_20.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-21" data-name="หน้า 22">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-21"><div class="img-wrapper"><img src="images/img_21.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-21"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_21.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-22" data-name="หน้า 23">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-22"><div class="img-wrapper"><img src="images/img_22.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-22"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_22.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-23" data-name="หน้า 24">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-23"><div class="img-wrapper"><img src="images/img_23.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-23"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_23.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-24" data-name="หน้า 25">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-24"><div class="img-wrapper"><img src="images/img_24.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-24"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_24.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-25" data-name="หน้า 26">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-25"><div class="img-wrapper"><img src="images/img_25.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-25"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_25.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-26" data-name="หน้า 27">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-26"><div class="img-wrapper"><img src="images/img_26.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-26"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_26.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-27" data-name="หน้า 28">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-27"><div class="img-wrapper"><img src="images/img_27.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-27"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_27.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-28" data-name="หน้า 29">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-28"><div class="img-wrapper"><img src="images/img_28.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-28"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_28.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-29" data-name="หน้า 30">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-29"><div class="img-wrapper"><img src="images/img_29.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-29"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_29.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-30" data-name="หน้า 31">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-30"><div class="img-wrapper"><img src="images/img_30.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-30"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_30.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-31" data-name="หน้า 32">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-31"><div class="img-wrapper"><img src="images/img_31.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-31"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_31.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-32" data-name="หน้า 33">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-32"><div class="img-wrapper"><img src="images/img_32.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-32"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_32.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-33" data-name="หน้า 34">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-33"><div class="img-wrapper"><img src="images/img_33.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-33"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_33.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-34" data-name="หน้า 35">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-34"><div class="img-wrapper"><img src="images/img_34.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-34"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_34.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-35" data-name="หน้า 36">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-35"><div class="img-wrapper"><img src="images/img_35.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-35"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_35.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-36" data-name="หน้า 37">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-36"><div class="img-wrapper"><img src="images/img_36.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-36"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_36.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-37" data-name="หน้า 38">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-37"><div class="img-wrapper"><img src="images/img_37.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-37"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_37.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-38" data-name="หน้า 39">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-38"><div class="img-wrapper"><img src="images/img_38.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-38"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_38.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-39" data-name="หน้า 40">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-39"><div class="img-wrapper"><img src="images/img_39.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-39"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_39.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-40" data-name="หน้า 41">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-40"><div class="img-wrapper"><img src="images/img_40.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-40"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_40.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-41" data-name="หน้า 42">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-41"><div class="img-wrapper"><img src="images/img_41.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-41"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_41.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-42" data-name="หน้า 43">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-42"><div class="img-wrapper"><img src="images/img_42.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-42"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_42.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-43" data-name="หน้า 44">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-43"><div class="img-wrapper"><img src="images/img_43.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-43"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_43.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-44" data-name="หน้า 45">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-44"><div class="img-wrapper"><img src="images/img_44.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-44"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_44.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-45" data-name="หน้า 46">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-45"><div class="img-wrapper"><img src="images/img_45.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-45"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_45.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-46" data-name="หน้า 47">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-46"><div class="img-wrapper"><img src="images/img_46.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-46"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_46.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-47" data-name="หน้า 48">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-47"><div class="img-wrapper"><img src="images/img_47.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-47"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_47.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-48" data-name="หน้า 49">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-48"><div class="img-wrapper"><img src="images/img_48.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-48"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_48.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-49" data-name="หน้า 50">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-49"><div class="img-wrapper"><img src="images/img_49.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-49"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_49.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-50" data-name="หน้า 51">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-50"><div class="img-wrapper"><img src="images/img_50.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-50"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_50.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-51" data-name="หน้า 52">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-51"><div class="img-wrapper"><img src="images/img_51.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-51"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_51.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-52" data-name="หน้า 53">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-52"><div class="img-wrapper"><img src="images/img_52.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-52"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_52.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-53" data-name="หน้า 54">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-53"><div class="img-wrapper"><img src="images/img_53.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-53"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_53.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-54" data-name="หน้า 55">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-54"><div class="img-wrapper"><img src="images/img_54.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-54"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_54.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-55" data-name="หน้า 56">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-55"><div class="img-wrapper"><img src="images/img_55.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-55"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_55.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-56" data-name="หน้า 57">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-56"><div class="img-wrapper"><img src="images/img_56.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-56"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_56.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-57" data-name="หน้า 58">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-57"><div class="img-wrapper"><img src="images/img_57.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-57"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_57.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-58" data-name="หน้า 59">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-58"><div class="img-wrapper"><img src="images/img_58.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-58"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_58.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-59" data-name="หน้า 60">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-59"><div class="img-wrapper"><img src="images/img_59.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-59"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_59.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-60" data-name="หน้า 61">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-60"><div class="img-wrapper"><img src="images/img_60.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-60"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_60.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-61" data-name="หน้า 62">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-61"><div class="img-wrapper"><img src="images/img_61.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-61"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_61.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-62" data-name="หน้า 63">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-62"><div class="img-wrapper"><img src="images/img_62.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-62"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_62.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-63" data-name="หน้า 64">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-63"><div class="img-wrapper"><img src="images/img_63.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-63"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_63.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-64" data-name="หน้า 65">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-64"><div class="img-wrapper"><img src="images/img_64.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-64"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_64.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-65" data-name="หน้า 66">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-65"><div class="img-wrapper"><img src="images/img_65.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-65"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_65.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-66" data-name="หน้า 67">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-66"><div class="img-wrapper"><img src="images/img_66.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-66"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_66.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-67" data-name="หน้า 68">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-67"><div class="img-wrapper"><img src="images/img_67.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-67"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_67.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-68" data-name="หน้า 69">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-68"><div class="img-wrapper"><img src="images/img_68.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-68"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_68.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-69" data-name="หน้า 70">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-69"><div class="img-wrapper"><img src="images/img_69.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-69"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_69.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-70" data-name="หน้า 71">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-70"><div class="img-wrapper"><img src="images/img_70.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-70"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_70.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-71" data-name="หน้า 72">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-71"><div class="img-wrapper"><img src="images/img_71.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-71"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_71.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-72" data-name="หน้า 73">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-72"><div class="img-wrapper"><img src="images/img_72.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-72"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_72.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-73" data-name="หน้า 74">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-73"><div class="img-wrapper"><img src="images/img_73.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-73"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_73.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-74" data-name="หน้า 75">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-74"><div class="img-wrapper"><img src="images/img_74.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-74"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_74.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-75" data-name="หน้า 76">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-75"><div class="img-wrapper"><img src="images/img_75.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-75"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_75.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-76" data-name="หน้า 77">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-76"><div class="img-wrapper"><img src="images/img_76.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-76"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_76.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-77" data-name="หน้า 78">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-77"><div class="img-wrapper"><img src="images/img_77.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-77"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_77.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-78" data-name="หน้า 79">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-78"><div class="img-wrapper"><img src="images/img_78.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-78"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_78.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-79" data-name="หน้า 80">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-79"><div class="img-wrapper"><img src="images/img_79.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-79"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_79.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-80" data-name="หน้า 81">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-80"><div class="img-wrapper"><img src="images/img_80.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-80"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_80.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-81" data-name="หน้า 82">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-81"><div class="img-wrapper"><img src="images/img_81.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-81"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_81.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-82" data-name="หน้า 83">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-82"><div class="img-wrapper"><img src="images/img_82.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-82"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_82.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-83" data-name="หน้า 84">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-83"><div class="img-wrapper"><img src="images/img_83.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-83"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_83.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-84" data-name="หน้า 85">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-84"><div class="img-wrapper"><img src="images/img_84.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-84"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_84.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-85" data-name="หน้า 86">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-85"><div class="img-wrapper"><img src="images/img_85.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-85"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_85.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-86" data-name="หน้า 87">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-86"><div class="img-wrapper"><img src="images/img_86.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-86"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_86.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-87" data-name="หน้า 88">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-87"><div class="img-wrapper"><img src="images/img_87.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-87"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_87.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-88" data-name="หน้า 89">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-88"><div class="img-wrapper"><img src="images/img_88.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-88"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_88.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-89" data-name="หน้า 90">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-89"><div class="img-wrapper"><img src="images/img_89.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-89"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_89.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-90" data-name="หน้า 91">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-90"><div class="img-wrapper"><img src="images/img_90.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-90"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_90.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-91" data-name="หน้า 92">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-91"><div class="img-wrapper"><img src="images/img_91.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-91"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_91.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-92" data-name="หน้า 93">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-92"><div class="img-wrapper"><img src="images/img_92.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-92"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_92.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-93" data-name="หน้า 94">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-93"><div class="img-wrapper"><img src="images/img_93.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-93"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_93.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-94" data-name="หน้า 95">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-94"><div class="img-wrapper"><img src="images/img_94.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-94"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_94.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-95" data-name="หน้า 96">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-95"><div class="img-wrapper"><img src="images/img_95.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-95"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_95.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-96" data-name="หน้า 97">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-96"><div class="img-wrapper"><img src="images/img_96.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-96"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_96.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-97" data-name="หน้า 98">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-97"><div class="img-wrapper"><img src="images/img_97.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-97"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_97.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-98" data-name="หน้า 99">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-98"><div class="img-wrapper"><img src="images/img_98.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-98"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_98.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-99" data-name="หน้า 100">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-99"><div class="img-wrapper"><img src="images/img_99.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-99"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_99.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-100" data-name="หน้า 101">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-100"><div class="img-wrapper"><img src="images/img_100.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-100"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_100.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-101" data-name="หน้า 102">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-101"><div class="img-wrapper"><img src="images/img_101.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-101"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_101.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-102" data-name="หน้า 103">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-102"><div class="img-wrapper"><img src="images/img_102.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-102"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_102.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-103" data-name="หน้า 104">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-103"><div class="img-wrapper"><img src="images/img_103.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-103"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_103.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-104" data-name="หน้า 105">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-104"><div class="img-wrapper"><img src="images/img_104.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-104"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_104.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-105" data-name="หน้า 106">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-105"><div class="img-wrapper"><img src="images/img_105.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-105"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_105.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-106" data-name="หน้า 107">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-106"><div class="img-wrapper"><img src="images/img_106.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-106"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_106.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-107" data-name="หน้า 108">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-107"><div class="img-wrapper"><img src="images/img_107.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-107"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_107.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-108" data-name="หน้า 109">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-108"><div class="img-wrapper"><img src="images/img_108.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-108"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_108.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-109" data-name="หน้า 110">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-109"><div class="img-wrapper"><img src="images/img_109.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-109"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_109.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-110" data-name="หน้า 111">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-110"><div class="img-wrapper"><img src="images/img_110.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-110"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_110.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-111" data-name="หน้า 112">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-111"><div class="img-wrapper"><img src="images/img_111.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-111"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_111.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-112" data-name="หน้า 113">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-112"><div class="img-wrapper"><img src="images/img_112.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-112"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_112.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-113" data-name="หน้า 114">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-113"><div class="img-wrapper"><img src="images/img_113.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-113"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_113.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-114" data-name="หน้า 115">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-114"><div class="img-wrapper"><img src="images/img_114.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-114"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_114.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-115" data-name="หน้า 116">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-115"><div class="img-wrapper"><img src="images/img_115.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-115"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_115.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-116" data-name="หน้า 117">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-116"><div class="img-wrapper"><img src="images/img_116.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-116"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_116.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-117" data-name="หน้า 118">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-117"><div class="img-wrapper"><img src="images/img_117.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-117"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_117.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-118" data-name="หน้า 119">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-118"><div class="img-wrapper"><img src="images/img_118.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-118"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_118.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-119" data-name="หน้า 120">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-119"><div class="img-wrapper"><img src="images/img_119.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-119"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_119.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-120" data-name="หน้า 121">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-120"><div class="img-wrapper"><img src="images/img_120.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-120"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_120.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-121" data-name="หน้า 122">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-121"><div class="img-wrapper"><img src="images/img_121.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-121"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_121.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-122" data-name="หน้า 123">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-122"><div class="img-wrapper"><img src="images/img_122.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-122"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_122.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-123" data-name="หน้า 124">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-123"><div class="img-wrapper"><img src="images/img_123.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-123"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_123.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-124" data-name="หน้า 125">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-124"><div class="img-wrapper"><img src="images/img_124.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-124"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_124.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-125" data-name="หน้า 126">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-125"><div class="img-wrapper"><img src="images/img_125.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-125"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_125.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-126" data-name="หน้า 127">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-126"><div class="img-wrapper"><img src="images/img_126.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-126"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_126.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-127" data-name="หน้า 128">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-127"><div class="img-wrapper"><img src="images/img_127.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-127"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_127.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-128" data-name="หน้า 129">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-128"><div class="img-wrapper"><img src="images/img_128.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-128"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_128.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-129" data-name="หน้า 130">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-129"><div class="img-wrapper"><img src="images/img_129.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-129"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_129.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-130" data-name="หน้า 131">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-130"><div class="img-wrapper"><img src="images/img_130.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-130"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_130.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-131" data-name="หน้า 132">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-131"><div class="img-wrapper"><img src="images/img_131.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-131"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_131.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-132" data-name="หน้า 133">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-132"><div class="img-wrapper"><img src="images/img_132.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-132"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_132.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-133" data-name="หน้า 134">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-133"><div class="img-wrapper"><img src="images/img_133.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-133"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_133.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-134" data-name="หน้า 135">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-134"><div class="img-wrapper"><img src="images/img_134.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-134"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_134.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-135" data-name="หน้า 136">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-135"><div class="img-wrapper"><img src="images/img_135.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-135"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_135.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-136" data-name="หน้า 137">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-136"><div class="img-wrapper"><img src="images/img_136.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-136"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_136.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-137" data-name="หน้า 138">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-137"><div class="img-wrapper"><img src="images/img_137.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-137"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_137.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-138" data-name="หน้า 139">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-138"><div class="img-wrapper"><img src="images/img_138.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-138"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_138.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-139" data-name="หน้า 140">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-139"><div class="img-wrapper"><img src="images/img_139.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-139"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_139.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-140" data-name="หน้า 141">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-140"><div class="img-wrapper"><img src="images/img_140.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-140"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_140.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-141" data-name="หน้า 142">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-141"><div class="img-wrapper"><img src="images/img_141.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-141"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_141.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-142" data-name="หน้า 143">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-142"><div class="img-wrapper"><img src="images/img_142.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-142"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_142.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-143" data-name="หน้า 144">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-143"><div class="img-wrapper"><img src="images/img_143.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-143"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_143.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-144" data-name="หน้า 145">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-144"><div class="img-wrapper"><img src="images/img_144.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-144"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_144.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-145" data-name="หน้า 146">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-145"><div class="img-wrapper"><img src="images/img_145.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-145"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_145.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-146" data-name="หน้า 147">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-146"><div class="img-wrapper"><img src="images/img_146.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-146"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_146.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-147" data-name="หน้า 148">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-147"><div class="img-wrapper"><img src="images/img_147.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-147"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_147.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-148" data-name="หน้า 149">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-148"><div class="img-wrapper"><img src="images/img_148.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-148"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_148.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-149" data-name="หน้า 150">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-149"><div class="img-wrapper"><img src="images/img_149.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-149"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_149.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-150" data-name="หน้า 151">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-150"><div class="img-wrapper"><img src="images/img_150.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-150"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_150.jpg" loading="lazy"></div></div>
             
         </div>
     </div><div class="slide" id="slide-151" data-name="หน้า 152">
         <div class="slide-content">
             
-            <div class="img-container" id="img-cont-151"><div class="img-wrapper"><img src="images/img_151.jpg" class="editable-img"></div></div>
+            <div class="img-container" id="img-cont-151"><div class="img-wrapper"><img class="editable-img" style="opacity: 1;" src="images/img_151.jpg" loading="lazy"></div></div>
             
         </div>
     </div></div>
@@ -1282,10 +1274,70 @@ let currentSlideIndexForImg = 0;
 const slider = document.getElementById("slider");
 const loadingOverlay = document.getElementById('loading-overlay');
 const loadingText = document.getElementById('loading-text');
+const loadingSubText = document.getElementById('loading-subtext');
+
+// --- 🚀 LAZY LOADING OBSERVER (For Editor) ---
+const lazyLoadObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            const img = entry.target;
+            if (img.dataset.src) {
+                img.src = img.dataset.src; 
+                img.removeAttribute('data-src');
+                img.style.opacity = 1;
+                observer.unobserve(img);
+            }
+        }
+    });
+}, { rootMargin: "200% 0px 200% 0px" }); 
 
 // Initial Setup
 buildTOC();
 goSlide(0); 
+
+// --- Core Helper: True Auto-Crop on Canvas (Adjusted Padding) ---
+function cropCanvasToContent(sourceCanvas, pad = 8) {
+    const ctx = sourceCanvas.getContext('2d', { willReadFrequently: true });
+    const imgData = ctx.getImageData(0, 0, sourceCanvas.width, sourceCanvas.height);
+    const data = imgData.data;
+    let minX = sourceCanvas.width, minY = sourceCanvas.height, maxX = 0, maxY = 0;
+    let found = false;
+
+    for (let y = 0; y < sourceCanvas.height; y++) {
+        for (let x = 0; x < sourceCanvas.width; x++) {
+            const i = (y * sourceCanvas.width + x) * 4;
+            const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+            // Ignore transparent or nearly pure white pixels
+            if (a > 20 && (r < 250 || g < 250 || b < 250)) {
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+                found = true;
+            }
+        }
+    }
+
+    if (!found) return sourceCanvas; // Empty canvas
+
+    // Apply exact padding (increased for better readability)
+    minX = Math.max(0, minX - pad);
+    minY = Math.max(0, minY - pad);
+    maxX = Math.min(sourceCanvas.width, maxX + pad);
+    maxY = Math.min(sourceCanvas.height, maxY + pad);
+
+    const width = maxX - minX;
+    const height = maxY - minY;
+
+    if (width === sourceCanvas.width && height === sourceCanvas.height) return sourceCanvas; // No crop needed
+
+    const croppedCanvas = document.createElement('canvas');
+    croppedCanvas.width = width;
+    croppedCanvas.height = height;
+    croppedCanvas.getContext('2d').drawImage(sourceCanvas, minX, minY, width, height, 0, 0, width, height);
+    return croppedCanvas;
+}
+
 
 // --- Layout Toggle ---
 function toggleLayout() {
@@ -1334,18 +1386,27 @@ document.getElementById('bulkInput').addEventListener('change', async function(e
         const hasImages = firstSlide.querySelectorAll('img').length > 0;
         if(!hasImages) slider.innerHTML = ''; 
     }
+    
     loadingOverlay.style.display = 'flex';
+    
     try {
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            loadingText.innerText = `กำลังประมวลผลไฟล์ ${i+1}/${files.length}...`;
-            if (file.type === 'application/pdf') await processPDF(file);
-            else if (file.type.startsWith('image/')) await processImage(file);
+            loadingText.innerText = `กำลังนำเข้าไฟล์ ${i+1}/${files.length}`;
+            loadingSubText.innerText = `ครอบอัตโนมัติ: ${file.name}`;
+            
+            // Allow UI to update
+            await new Promise(r => setTimeout(r, 10));
+
+            if (file.type === 'application/pdf') {
+                await processPDF(file);
+            } else if (file.type.startsWith('image/')) {
+                await processImageWithAutoCrop(file);
+            }
         }
         reindexSlides();
         goSlide(0);
         loadingOverlay.style.display = 'none';
-        alert("นำเข้าข้อมูลเรียบร้อย!");
     } catch (err) {
         console.error(err);
         loadingOverlay.style.display = 'none';
@@ -1354,33 +1415,65 @@ document.getElementById('bulkInput').addEventListener('change', async function(e
     this.value = ''; 
 });
 
-async function processImage(file) {
-    return new Promise((resolve) => {
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-            createNewSlide(evt.target.result, file); 
-            resolve();
+// --- 🖼 Image Processing with Auto-Crop ---
+async function processImageWithAutoCrop(file) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            
+            const croppedCanvas = cropCanvasToContent(canvas, 8); // Auto crop 8px padding
+            
+            croppedCanvas.toBlob(blob => {
+                const newUrl = URL.createObjectURL(blob);
+                const fakeFile = new File([blob], file.name, { type: file.type }); // Save as new File
+                createNewSlide(newUrl, fakeFile);
+                resolve();
+            }, file.type || 'image/jpeg', 0.90);
         };
-        reader.readAsDataURL(file);
+        img.onerror = reject;
+        img.src = URL.createObjectURL(file);
     });
 }
 
+// --- 🖼 PDF 4K Rendering + Auto-Crop ---
 async function processPDF(file) {
     const arrayBuffer = await file.arrayBuffer();
     const pdf = await pdfjsLib.getDocument(arrayBuffer).promise;
+    
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-        loadingText.innerText = `กำลังแปลง PDF หน้า ${pageNum}/${pdf.numPages}...`;
+        loadingSubText.innerText = `แปลง PDF เป็น 4K และครอบขอบ หน้า ${pageNum}/${pdf.numPages}`;
         const page = await pdf.getPage(pageNum);
-        const viewport = page.getViewport({ scale: 2.0 }); 
+        
+        // Calculate scale to achieve ~4K (3840px width)
+        const unscaledViewport = page.getViewport({ scale: 1.0 });
+        const targetWidth = 3840;
+        let scale = targetWidth / unscaledViewport.width;
+        if(scale > 5.0) scale = 5.0; 
+        if(scale < 2.0) scale = 2.0; 
+        
+        const viewport = page.getViewport({ scale: scale }); 
         const canvas = document.createElement('canvas');
-        const context = canvas.getContext('2d');
+        const context = canvas.getContext('2d', { alpha: false }); 
         canvas.height = viewport.height;
         canvas.width = viewport.width;
+        
+        // Render PDF
         await page.render({ canvasContext: context, viewport: viewport }).promise;
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.85));
+        
+        // Auto Crop immediately before saving to memory!
+        const croppedCanvas = cropCanvasToContent(canvas, 8);
+        
+        const blob = await new Promise(resolve => croppedCanvas.toBlob(resolve, 'image/jpeg', 0.90));
         const imgUrl = URL.createObjectURL(blob);
         const fakeFile = new File([blob], `pdf_page_${pageNum}.jpg`, { type: 'image/jpeg' });
+        
         createNewSlide(imgUrl, fakeFile);
+        
+        await new Promise(r => setTimeout(r, 5)); // Yield to prevent freeze
     }
 }
 
@@ -1424,32 +1517,59 @@ function addNewPage() {
 }
 
 function triggerAddImage(index) { currentSlideIndexForImg = index; document.getElementById('imgInputGlobal').click(); }
-document.getElementById('imgInputGlobal').addEventListener('change', function(e) {
+document.getElementById('imgInputGlobal').addEventListener('change', async function(e) {
     if (this.files && this.files[0]) {
         const file = this.files[0];
-        const reader = new FileReader();
-        reader.onload = function(evt) {
-            const container = document.getElementById(`img-cont-${currentSlideIndexForImg}`);
-            createImageWrapper(container, evt.target.result, file);
+        
+        // Use Auto Crop for single image insert as well
+        loadingOverlay.style.display = 'flex';
+        loadingText.innerText = "กำลังนำเข้ารูปภาพ...";
+        loadingSubText.innerText = "ครอบอัตโนมัติ (เว้นขอบ 8px)";
+        
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            canvas.getContext('2d').drawImage(img, 0, 0);
+            
+            const croppedCanvas = cropCanvasToContent(canvas, 8);
+            croppedCanvas.toBlob(blob => {
+                const url = URL.createObjectURL(blob);
+                const fakeFile = new File([blob], file.name, { type: file.type });
+                const container = document.getElementById(`img-cont-${currentSlideIndexForImg}`);
+                createImageWrapper(container, url, fakeFile);
+                loadingOverlay.style.display = 'none';
+            }, file.type || 'image/jpeg', 0.90);
         };
-        reader.readAsDataURL(file);
+        img.src = URL.createObjectURL(file);
     }
     this.value = ''; 
 });
 
 function createImageWrapper(container, src, fileObj = null) {
     const wrapper = document.createElement('div'); wrapper.className = 'img-wrapper';
+    
     const img = document.createElement('img'); 
-    img.src = src; 
+    img.dataset.src = src; // For Lazy Loading in Editor
+    img.style.opacity = "0"; // Fade-in effect
     img.className = 'editable-img';
     if(fileObj) img.fileRef = fileObj;
+    
+    lazyLoadObserver.observe(img);
+
     const tools = document.createElement('div'); tools.className = 'img-tools edit-only';
-    const cropBtn = document.createElement('button'); cropBtn.className = 'tool-btn crop-btn'; cropBtn.innerText = '✂️ ตัดรูป'; cropBtn.onclick = function() { initCrop(img); };
+    
+    // Auto crop is now implicit on upload. Kept manual crop for fine-tuning.
+    const cropBtn = document.createElement('button'); cropBtn.className = 'tool-btn crop-btn'; cropBtn.innerText = '✂️ ตัดด้วยมือ'; cropBtn.onclick = function() { initCrop(img); };
     const delBtn = document.createElement('button'); delBtn.className = 'tool-btn delete-btn'; delBtn.innerText = '❌ ลบ'; delBtn.onclick = function() { wrapper.remove(); };
-    tools.appendChild(cropBtn); tools.appendChild(delBtn); wrapper.appendChild(img); wrapper.appendChild(tools); container.appendChild(wrapper);
+    
+    tools.appendChild(cropBtn); tools.appendChild(delBtn); 
+    wrapper.appendChild(img); wrapper.appendChild(tools); 
+    container.appendChild(wrapper);
 }
 
-// Cropper
+// --- Manual Cropper ---
 let cropCanvas = document.getElementById('cropCanvas'), ctx = cropCanvas.getContext('2d'), currentCropImg = null, startX, startY, isDragging = false, rect = {x:0, y:0, w:0, h:0}, imgObj = new Image();
 function initCrop(imgElement) {
     currentCropImg = imgElement; imgObj.src = imgElement.src;
@@ -1478,11 +1598,17 @@ function applyCrop() {
     if (rect.w === 0 || rect.h === 0) { closeCrop(); return; }
     let fx = rect.w < 0 ? rect.x + rect.w : rect.x, fy = rect.h < 0 ? rect.y + rect.h : rect.y, fw = Math.abs(rect.w), fh = Math.abs(rect.h);
     const scaleX = imgObj.naturalWidth / cropCanvas.width, scaleY = imgObj.naturalHeight / cropCanvas.height;
+    
     const tempCanvas = document.createElement('canvas'); tempCanvas.width = fw * scaleX; tempCanvas.height = fh * scaleY;
     tempCanvas.getContext('2d').drawImage(imgObj, fx * scaleX, fy * scaleY, fw * scaleX, fh * scaleY, 0, 0, tempCanvas.width, tempCanvas.height);
-    currentCropImg.src = tempCanvas.toDataURL(); 
-    currentCropImg.fileRef = null; 
-    closeCrop();
+    
+    tempCanvas.toBlob(blob => {
+        const newUrl = URL.createObjectURL(blob);
+        currentCropImg.src = newUrl; 
+        currentCropImg.dataset.src = newUrl;
+        currentCropImg.fileRef = null; 
+        closeCrop();
+    }, 'image/jpeg', 0.95);
 }
 
 // Navigation & Logic
@@ -1529,7 +1655,6 @@ function buildTOC() {
 function addTocItem(index, name) {
     const toc = document.getElementById("toc"), wrapper = document.createElement('div'); wrapper.className = 'toc-item-wrapper'; wrapper.id = `toc-wrap-${index}`;
     
-    // Check if Editor Mode (bulkInput exists)
     const isEditor = document.getElementById('bulkInput') !== null;
 
     if (isEditor) {
@@ -1586,98 +1711,122 @@ function fontSize(change){
 }
 function changeTheme(themeName) { document.body.className = themeName; }
 
-// --- EXPORT AS ZIP LOGIC ---
+// --- 📦 FIX ASYNC 4K EXPORT LOGIC ---
 async function downloadZip(){
-  const zip = new JSZip();
-  const imgFolder = zip.folder("images");
-  
-  const clone = document.documentElement.cloneNode(true);
-  
-  // 1. Cleanup Editor UI (including bulkInput to trigger read-only mode in TOC)
-  const editorTools = clone.querySelectorAll(".edit-only, .delete-page-btn, .toc-del-btn, #cropModal, #imgInputGlobal, #loading-overlay, #bulkInput");
-  editorTools.forEach(el => el.remove());
-  
-  // 2. Disable ContentEditable
-  clone.querySelectorAll("[contenteditable]").forEach(el => el.removeAttribute("contenteditable"));
-  
-  // 3. Clear TOC so it rebuilds in Read-Only mode automatically on load
-  const tocContainer = clone.querySelector('#toc'); // FIX: use querySelector
-  if(tocContainer) tocContainer.innerHTML = '';
+    loadingOverlay.style.display = 'flex';
+    loadingText.innerText = "กำลังแพ็กไฟล์ E-book...";
+    loadingSubText.innerText = "กำลังแปลงข้อมูลเป็นไฟล์ Zip (4K Quality) อาจใช้เวลาสักครู่...";
 
-  // 4. Transform Select
-  const pageSelect = clone.querySelector('#pageSelect');
-  if(pageSelect) {
-      pageSelect.setAttribute('onchange', "window.location.hash = '#slide-' + this.value");
-  }
+    try {
+        const zip = new JSZip();
+        const imgFolder = zip.folder("images");
+        
+        const clone = document.documentElement.cloneNode(true);
+        
+        // Cleanup Editor UI
+        const editorTools = clone.querySelectorAll(".edit-only, .delete-page-btn, .toc-del-btn, #cropModal, #imgInputGlobal, #loading-overlay, #bulkInput");
+        editorTools.forEach(el => el.remove());
+        
+        clone.querySelectorAll("[contenteditable]").forEach(el => el.removeAttribute("contenteditable"));
+        
+        const tocContainer = clone.querySelector('#toc'); 
+        if(tocContainer) tocContainer.innerHTML = '';
 
-  // 5. Inject Export Script
-  const exportScript = document.createElement('script');
-  exportScript.textContent = `
-    // Auto-rebuild TOC in Read-Only Mode
-    window.addEventListener('load', () => {
-        buildTOC(); // This will use the "else" block in addTocItem because #bulkInput is gone
-        if(window.location.hash) {
-            const index = window.location.hash.replace('#slide-', '');
-            goSlide(index);
+        const pageSelect = clone.querySelector('#pageSelect');
+        if(pageSelect) {
+            pageSelect.setAttribute('onchange', "window.location.hash = '#slide-' + this.value");
         }
-    });
-    window.addEventListener('hashchange', () => {
-        const index = window.location.hash.replace('#slide-', '');
-        goSlide(index);
-    });
-  `;
-  clone.querySelector('body').appendChild(exportScript);
 
-  // 6. Process Images
-  const images = clone.querySelectorAll("img.editable-img");
-  const originalImages = document.querySelectorAll("img.editable-img");
+        const exportScript = document.createElement('script');
+        exportScript.textContent = `
+            window.addEventListener('load', () => {
+                buildTOC(); 
+                if(window.location.hash) {
+                    const index = window.location.hash.replace('#slide-', '');
+                    goSlide(index);
+                }
+            });
+            window.addEventListener('hashchange', () => {
+                const index = window.location.hash.replace('#slide-', '');
+                goSlide(index);
+            });
+        `;
+        clone.querySelector('body').appendChild(exportScript);
 
-  for(let i=0; i<images.length; i++) {
-      const imgClone = images[i];
-      const imgOriginal = originalImages[i];
-      let filename = `img_${Date.now()}_${i}.jpg`;
-      let data = null;
+        // --- Fetch High-Res Blobs Async ---
+        const images = clone.querySelectorAll("img.editable-img");
+        const originalImages = document.querySelectorAll("img.editable-img");
 
-      if (imgOriginal.fileRef) {
-          data = imgOriginal.fileRef;
-          const ext = data.name ? data.name.split('.').pop() : 'jpg';
-          filename = `img_${i}.${ext}`;
-      } else if (imgOriginal.src.startsWith('data:')) {
-          const base64Data = imgOriginal.src.split(',')[1];
-          filename = `img_cropped_${i}.jpg`;
-          data = base64Data;
-      }
+        for(let i=0; i<images.length; i++) {
+            const imgClone = images[i];
+            const imgOriginal = originalImages[i];
+            
+            const targetSrc = imgOriginal.dataset.src || imgOriginal.src;
+            if(!targetSrc) continue;
 
-      if (data) {
-          if(imgOriginal.fileRef) imgFolder.file(filename, data);
-          else imgFolder.file(filename, data, {base64: true});
-          imgClone.src = "images/" + filename;
-      }
-  }
+            loadingSubText.innerText = `กำลังบันทึกภาพหน้า ${i+1}/${images.length}`;
 
-  // Add Doctype for safety
-  zip.file("index.html", "<!DOCTYPE html>\n" + clone.outerHTML);
+            let filename = `img_${Date.now()}_${i}.jpg`;
+            let dataBlob = null;
 
-  zip.generateAsync({type:"blob"}).then(function(content) {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(content);
-      a.download = "ebook-project.zip";
-      a.click();
-  });
+            if (imgOriginal.fileRef) {
+                dataBlob = imgOriginal.fileRef;
+                const ext = dataBlob.name ? dataBlob.name.split('.').pop() : 'jpg';
+                filename = `img_${i}.${ext}`;
+            } else if (targetSrc.startsWith('blob:')) {
+                const response = await fetch(targetSrc);
+                dataBlob = await response.blob();
+                filename = `img_${i}.jpg`;
+            } else if (targetSrc.startsWith('data:')) {
+                dataBlob = targetSrc.split(',')[1];
+                filename = `img_${i}.jpg`;
+            }
+
+            if (dataBlob) {
+                if(targetSrc.startsWith('data:')) {
+                    imgFolder.file(filename, dataBlob, {base64: true});
+                } else {
+                    imgFolder.file(filename, dataBlob);
+                }
+                
+                // FIX: ป้องกันจอดำ โดยให้ใช้ Native Loading ในไฟล์ Export (ไม่ต้องพึ่ง JS)
+                imgClone.src = "images/" + filename;
+                imgClone.removeAttribute('data-src');
+                imgClone.setAttribute('loading', 'lazy'); // ใช้ระบบ Lazy load ของ Browser แทน
+                imgClone.style.opacity = "1"; // โชว์ภาพทันทีที่โหลดเสร็จ
+            }
+        }
+
+        zip.file("index.html", "<!DOCTYPE html>\n" + clone.outerHTML);
+
+        loadingSubText.innerText = "กำลังสร้างไฟล์ Zip ขั้นสุดท้าย...";
+        const content = await zip.generateAsync({type:"blob"});
+        
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(content);
+        a.download = "ebook-project-4k.zip";
+        a.click();
+        
+        loadingOverlay.style.display = 'none';
+
+    } catch (err) {
+        console.error(err);
+        loadingOverlay.style.display = 'none';
+        alert("เกิดข้อผิดพลาดในการบันทึกไฟล์");
+    }
 }
 </script>
 
 <script>
-    // Auto-rebuild TOC in Read-Only Mode
-    window.addEventListener('load', () => {
-        buildTOC(); // This will use the "else" block in addTocItem because #bulkInput is gone
-        if(window.location.hash) {
-            const index = window.location.hash.replace('#slide-', '');
-            goSlide(index);
-        }
-    });
-    window.addEventListener('hashchange', () => {
-        const index = window.location.hash.replace('#slide-', '');
-        goSlide(index);
-    });
-  </script></body></html>
+            window.addEventListener('load', () => {
+                buildTOC(); 
+                if(window.location.hash) {
+                    const index = window.location.hash.replace('#slide-', '');
+                    goSlide(index);
+                }
+            });
+            window.addEventListener('hashchange', () => {
+                const index = window.location.hash.replace('#slide-', '');
+                goSlide(index);
+            });
+        </script></body></html>
