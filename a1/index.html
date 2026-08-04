@@ -84,10 +84,11 @@ body.light .control-btn{background:#ddd;color:#111; border-color:#ccc;}
   min-width:100vw;
   height:100vh;
   padding:0;
-  /* Use Flexbox with margin:auto for smart centering */
   display: flex;
   flex-direction: column;
-  overflow: auto; /* Allow scrolling inside slide when zoomed */
+  align-items: safe center;
+  justify-content: safe center;
+  overflow: auto;
   scroll-snap-align:start;
   position: relative;
 }
@@ -119,12 +120,12 @@ body.vertical-read .nav {
 /* Standard Slide Content */
 .slide-content {
     width: 100%;
-    /* Key fix: margin auto centers it, but allows expansion */
-    margin: auto; 
+    margin: auto 0; 
+    align-self: safe center;
     padding: 60px 0 100px 0; 
     position: relative; 
-    flex-shrink: 0; /* Prevent shrinking in flex container */
-    text-align: center; /* Center inline content like images */
+    flex-shrink: 0; 
+    text-align: center; 
 }
 
 /* Delete Page Button Style */
