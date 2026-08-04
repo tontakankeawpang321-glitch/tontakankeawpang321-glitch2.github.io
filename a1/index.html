@@ -79,6 +79,10 @@ body.light .control-btn{background:#ddd;color:#111; border-color:#ccc;}
   scroll-snap-type:x mandatory;
   scroll-behavior:smooth;
 }
+/* เมื่อมีการซูม ให้ปลดล็อคการสแนปหน้า เพื่อให้เลื่อนทางขวาได้อย่างอิสระ */
+body.zoomed .slider {
+  scroll-snap-type: none !important;
+}
 
 .slide{
   min-width:100vw;
@@ -88,7 +92,7 @@ body.light .control-btn{background:#ddd;color:#111; border-color:#ccc;}
   flex-direction: column;
   align-items: safe center;
   justify-content: safe center;
-  overflow: auto;
+  overflow: auto; /* ปลดล็อคการสกรอลล์ในสไลด์ */
   scroll-snap-align:start;
   position: relative;
 }
@@ -120,7 +124,7 @@ body.vertical-read .nav {
 /* Standard Slide Content */
 .slide-content {
     width: 100%;
-    margin: auto 0; 
+    margin: auto 0;
     align-self: safe center;
     padding: 60px 0 100px 0; 
     position: relative; 
@@ -323,7 +327,7 @@ canvas#cropCanvas { display: block; cursor: crosshair; }
     --tw-contain-style:  
 }</style></head>
 
-<body class="dark">
+<body class="light">
 
 <!-- Hidden Inputs -->
 
@@ -1966,7 +1970,15 @@ function updateCounters() {
 function toggleTOC(){ document.getElementById("toc").classList.toggle("show"); }
 function fontSize(change){
   currentZoom += (change * 0.1); 
-  if(currentZoom < 0.5) currentZoom = 0.5; if(currentZoom > 5.0) currentZoom = 5.0; 
+  if(currentZoom < 0.5) currentZoom = 0.5; 
+  if(currentZoom > 5.0) currentZoom = 5.0; 
+  
+  // หากซูมมากกว่า 1.0 เท่า ให้ใส่คลาส zoomed เพื่อให้เลื่อนทางขวาได้
+  if(currentZoom > 1.0) {
+    document.body.classList.add("zoomed");
+  } else {
+    document.body.classList.remove("zoomed");
+  }
   
   const widthPercent = Math.round(currentZoom * 100);
   document.querySelectorAll(".slide-content").forEach(el => { 
@@ -1974,6 +1986,7 @@ function fontSize(change){
     el.style.width = widthPercent + "%";
     el.style.fontSize = (18 * currentZoom) + "px";
   });
+});
 }
 function changeTheme(themeName) { document.body.className = themeName; }
 
