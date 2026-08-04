@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
-<title>ชั้นหนังสือธรรมบท – มือถือ 4 คอลัมน์ (AI Pali Tutor)</title>
+<title>ชั้นหนังสือธรรมบท – มือถือ 4 คอลัมน์ (AI Pali Tutor & Scanner)</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -128,14 +128,14 @@
     color: var(--muted);
   }
 
-  /* ===== Chatbot UI ===== */
+  /* ===== Chatbot & Scan UI ===== */
   .chat-bubble::before { content: ''; position: absolute; width: 0; height: 0; border-style: solid; }
   .chat-bubble-user::before {
     border-width: 0 12px 12px 12px; border-color: transparent transparent #d97706 transparent;
     top: -10px; right: 12px;
   }
   .chat-bubble-model::before {
-    border-width: 0 12px 12px 12px; border-color: transparent transparent #e5e7eb transparent;
+    border-width: 0 12px 12px 12px; border-color: transparent transparent #ffffff transparent;
     top: -10px; left: 12px;
   }
   .gemini-thinking-bar {
@@ -155,13 +155,14 @@
     background-color: #d97706;
     color: white;
     border: none; border-radius: 50%;
-    font-size: 24px; line-height: 60px; text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    font-size: 22px; line-height: 60px; text-align: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
     cursor: pointer; z-index: 998;
     transition: transform 0.2s, opacity 0.3s;
     font-family: 'Sarabun', sans-serif;
+    display: flex; align-items: center; justify-content: center;
   }
-  #fab-chat-toggle:hover { transform: scale(1.05); background-color: #b45309; }
+  #fab-chat-toggle:hover { transform: scale(1.08); background-color: #b45309; }
   
   #chatbot-modal {
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
@@ -178,12 +179,18 @@
     font-size: 14px;
     font-style: italic;
   }
+  .uploaded-img-thumb {
+    max-height: 180px;
+    border-radius: 8px;
+    object-fit: contain;
+    border: 1px solid rgba(0,0,0,0.1);
+  }
 </style>
 </head>
 <body>
   <div class="wrap">
     <h1>ชั้นหนังสือ</h1>
-    <p>แปลธรรมบทบาลี</p>
+    <p class="lead">แปลธรรมบทบาลี & AI ช่วยแปลสแกนภาพบาลี</p>
 
     <!-- Search Section -->
     <div class="search-container">
@@ -201,43 +208,87 @@
     </footer>
   </div>
 
-  <button id="fab-chat-toggle" title="ถาม AI บาลี">Ai</button>
+  <!-- Floating Action Button with Camera/Pali AI icon -->
+  <button id="fab-chat-toggle" title="ถาม AI & สแกนภาพบาลี">
+    <div class="flex flex-col items-center justify-center leading-none">
+      <span class="text-xl">📷</span>
+      <span class="text-[10px] font-bold mt-0.5">AIบาลี</span>
+    </div>
+  </button>
 
   <div id="chatbot-modal" class="chatbot-hidden">
     <div class="flex flex-col h-screen bg-gray-100">
-      <header class="bg-[#1e293b] text-white p-4 flex justify-between items-center shadow-md">
+      <header class="bg-[#1e293b] text-white p-3 md:p-4 flex justify-between items-center shadow-md">
         <div class="flex items-center gap-2">
             <span class="text-2xl text-[#fbbf24]">☸️</span>
-            <h1 class="text-lg font-bold font-sans text-white m-0">AI ช่วยแปลบาลี</h1>
+            <div>
+              <h1 class="text-base md:text-lg font-bold font-sans text-white m-0 leading-tight">AI ช่วยแปล & สแกนบาลี</h1>
+              <p class="text-xs text-amber-400 m-0 font-normal">ถ่ายรูป/อัพโหลดภาพหน้าหนังสือบาลีเพื่อแปลได้ทันที</p>
+            </div>
         </div>
-        <div>
-          <button id="new-chat-btn" class="bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-1 px-3 rounded mr-2 text-sm">เริ่มใหม่</button>
-          <button id="chatbot-close-btn" class="bg-gray-700 hover:bg-gray-900 text-white font-bold py-1 px-3 rounded text-sm">ปิด</button>
+        <div class="flex items-center gap-1.5">
+          <button id="new-chat-btn" class="bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-1 px-3 rounded text-xs md:text-sm transition">เริ่มใหม่</button>
+          <button id="chatbot-close-btn" class="bg-gray-700 hover:bg-gray-900 text-white font-bold py-1 px-3 rounded text-xs md:text-sm transition">ปิด</button>
         </div>
       </header>
 
-      <main id="chat-history" class="flex-1 overflow-y-auto p-4 space-y-4 bg-orange-50">
+      <main id="chat-history" class="flex-1 overflow-y-auto p-4 space-y-4 bg-orange-50/60">
         <div class="flex items-start space-x-2">
           <span class="text-2xl">🤖</span>
           <div class="chat-bubble chat-bubble-model bg-white text-gray-800 p-3 rounded-lg max-w-lg relative border border-gray-200 shadow-sm">
-            <p>เจริญพร... อาตมาคือ AI ผู้ช่วยแปลธรรมบทและอธิบายบาลีไวยากรณ์ ติดขัดประโยคไหน หรือสงสัยศัพท์ใด สอบถามได้เลย</p>
+            <p class="m-0">เจริญพร... อาตมาคือ **AI ผู้ช่วยแปลธรรมบทและอธิบายบาลีไวยากรณ์**</p>
+            <p class="mt-2 mb-0 text-sm text-gray-600">
+              📌 <strong>คำแนะนำการใช้งาน:</strong><br>
+              • พิมพ์ข้อความถามไวยากรณ์ หรือศัพท์บาลี<br>
+              • กดปุ่ม 📷 <strong>กล้อง/รูปภาพ</strong> ด้านล่าง ถ่ายรูปหน้าแบบเรียนบาลี/ข้อสอบ เพื่อให้อาตมาสแกนอ่านและแปลภาษาบาลีให้อย่างละเอียดได้เลย
+            </p>
           </div>
         </div>
       </main>
 
-      <div id="thinking-indicator" class="p-4 hidden bg-orange-50">
+      <div id="thinking-indicator" class="p-3 hidden bg-orange-50/60">
         <div class="flex items-center space-x-2">
           <span class="text-2xl">🤖</span>
           <div class="chat-bubble chat-bubble-model bg-white text-gray-800 p-3 rounded-lg max-w-lg relative border border-gray-200">
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-xs font-semibold text-amber-700" id="thinking-text">กำลังสแกนวิเคราะห์ภาษาบาลี...</span>
+            </div>
             <div class="gemini-thinking-bar"></div>
           </div>
         </div>
       </div>
 
-      <footer class="bg-white p-3 shadow-inner border-t border-gray-200 m-0 w-full max-w-full text-black">
-        <div class="flex space-x-2">
-          <input id="user-input" type="text" placeholder="พิมพ์ประโยคบาลี หรือคำถาม..." class="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#d97706] font-sans text-base text-black">
-          <button id="send-btn" class="bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-2 px-4 rounded-xl shadow-sm">ส่ง</button>
+      <!-- Image Preview Container above input footer -->
+      <div id="image-preview-wrapper" class="hidden bg-amber-100/80 px-4 py-2 border-t border-amber-200 flex items-center justify-between">
+        <div class="flex items-center gap-3 overflow-hidden">
+          <img id="image-preview" src="" alt="พรีวิวภาพถ่าย" class="w-14 h-14 object-cover rounded-lg border border-amber-400 shadow-xs">
+          <div class="text-xs text-amber-900 truncate">
+            <span class="font-bold block text-amber-950">พร้อมสแกนภาพนี้</span>
+            <span id="image-file-name" class="text-[11px] text-amber-800 truncate block">image.jpg</span>
+          </div>
+        </div>
+        <button id="remove-image-btn" class="text-red-600 hover:text-red-800 bg-white hover:bg-red-50 p-1.5 rounded-full border border-red-200 text-xs font-bold transition flex items-center justify-center w-7 h-7" title="ยกเลิกรูปนี้">✕</button>
+      </div>
+
+      <footer class="bg-white p-3 shadow-inner border-t border-gray-200 m-0 w-full text-black">
+        <div class="flex items-center space-x-2">
+          <!-- Hidden File Input supporting photo capture on mobile -->
+          <input type="file" id="image-input" accept="image/*" capture="environment" class="hidden">
+          
+          <!-- Image Upload Button -->
+          <button id="upload-img-btn" type="button" class="bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 p-2.5 rounded-xl font-medium transition flex items-center justify-center gap-1 text-sm shadow-xs" title="แนบภาพถ่าย/สแกนหนังสือบาลี">
+            <span class="text-xl">📷</span>
+            <span class="hidden sm:inline text-xs font-bold">แนบรูปภาพ</span>
+          </button>
+
+          <!-- Text Input -->
+          <input id="user-input" type="text" placeholder="พิมพ์ข้อความ หรือกดแนบรูปบาลี..." class="flex-1 p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#d97706] font-sans text-base text-black">
+          
+          <!-- Send Button -->
+          <button id="send-btn" class="bg-[#d97706] hover:bg-[#b45309] text-white font-bold py-3 px-4 rounded-xl shadow-sm transition flex items-center gap-1">
+            <span>ส่ง</span>
+            <span class="text-xs">➤</span>
+          </button>
         </div>
       </footer>
     </div>
@@ -250,8 +301,8 @@ const ITEMS = [
   { title:"หลักการแปล ปธ.123", cover:"https://drive.google.com/file/d/1d9GYTR6uBSWpFhBU7V4vtq8OQXhPXwK0/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/kuhand12/pae12.html", badge:"NEW"},
   { title:"คู่มือปธ.4-9", cover:"https://drive.google.com/file/d/12-cWr_LRoLFTAZMD6ENMxTM--Ku1HwBU/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/kuhan49/kuma456.html" },
   { title:"คู่มือปธ.7-8-9", cover:"https://drive.google.com/file/d/1Dw5XqDVcZEcJsZSwyP-0OxRLmmjqBVEz/view?usp=sharing", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/kuhan789/index.html" },
-    { title:"ปฐโม ภาโค เล่ม 1", cover:"https://drive.google.com/file/d/1ts_hJBfBalC5GKIX9IygI6qam1xMtcTM/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p1/index.html" },
-    { title:"ทุติโย ภาโค เล่ม 2 ", cover:"https://drive.google.com/file/d/1iXuNKdwcD21N2p5Wrq7lfWjCFdzSD_zg/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p2/index.html" },
+  { title:"ปฐโม ภาโค เล่ม 1", cover:"https://drive.google.com/file/d/1ts_hJBfBalC5GKIX9IygI6qam1xMtcTM/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p1/index.html" },
+  { title:"ทุติโย ภาโค เล่ม 2 ", cover:"https://drive.google.com/file/d/1iXuNKdwcD21N2p5Wrq7lfWjCFdzSD_zg/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p2/index.html" },
   { title:"ตติโย ภาโค เล่ม 3 ", cover:"https://drive.google.com/file/d/1erauk3QUXv3XxEk5HQpxLs_qDHveuG1b/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p3/index.html" },
   { title:"จตุตโถ ภาโค เล่ม 4", cover:"https://drive.google.com/file/d/1DfM5K58t3IdQjhv6ZlSul9wb-g1XonP2/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p4/index.html" },
   { title:"ปัญจโม ภาโค เล่ม 5", cover:"https://drive.google.com/file/d/1TKSiKNqnkqRCvYVjOLDOC36Ds-qe1LNn/view?usp=drive_link", url:"https://tontakankeawpang321-glitch.github.io/tontakankeawpang321-glitch2.github.io/p5/index.html" },
@@ -362,20 +413,22 @@ document.getElementById('book-search').addEventListener('input', function(e) {
 });
 
 /* =========================================
-    ส่วน Chatbot AI (Backend)
+   ส่วน AI Pali Tutor & Image OCR Scanner (Gemini API)
    ========================================= */
-const BACKEND_URL = 'https://blue-snow-cba8.tontakankeawpang.workers.dev/'; 
 
-const SYSTEM_PROMPT = {
-    role: "user",
-    parts: [{ text: "System Instruction: คุณคือ AI ผู้ช่วยแปลธรรมบทและบาลีไวยากรณ์ (Pali Translator AI) มีหน้าที่ช่วยนักเรียนบาลีแปลประโยค อธิบายไวยากรณ์ (วิภัตติ, วาจก, ประโยค) และขยายความเนื้อหาในธรรมบท ตอบด้วยภาษาสุภาพ เป็นทางการ (อาจใช้คำว่า 'เจริญพร' แทนสวัสดี) ห้ามตอบเรื่องกฎหมายหรือเรื่องอื่นที่ไม่เกี่ยวกับการเรียนบาลี" }]
-};
-const SYSTEM_ACK = {
-    role: "model",
-    parts: [{ text: "เจริญพร อาตมาพร้อมช่วยเหลือในการแปลธรรมบทและบาลีไวยากรณ์แล้ว" }]
-};
+const SYSTEM_INSTRUCTION_TEXT = `คุณคือ "AI ผู้ช่วยแปลธรรมบทและบาลีไวยากรณ์" (Pali Translator & Scan AI)
+หน้าที่ของคุณ:
+1. สแกน อ่านข้อความภาษาบาลีจากรูปภาพ (ทั้งอักษรไทย บาลี โรมัน หรือคัมภีร์ใบลาน/หนังสือเรียน)
+2. ถอดข้อความภาษาบาลีออกมาให้ถูกต้อง ชัดเจน
+3. แปลภาษาบาลีเป็นภาษาไทยอย่างละเอียด แบ่งเป็น:
+   - แปลโดยพยัญชนะ (แปลยกศัพท์)
+   - แปลโดยอรรถ (แปลสรุปความตามหลักบาลีสนามหลวง)
+4. วิเคราะห์ไวยากรณ์บาลีที่สำคัญ (เช่น ประธาน, กิริยาคิริยากิตก์/อาขยาต, วิภัตติ, วาจก, สนธิ, สมาส)
+5. สุภาพ เรียบร้อย ใช้คำขึ้นต้นด้วย "เจริญพร" หากผู้ใช้ถามทั่วไป ห้ามตอบเรื่องกฎหมาย การเมือง หรือเรื่องไม่เกี่ยวกับการเรียนบาลี`;
 
-let chatHistory = [SYSTEM_PROMPT, SYSTEM_ACK];
+let attachedImageBase64 = null;
+let attachedImageMimeType = null;
+let conversationHistory = [];
 
 const chatHistoryEl = document.getElementById('chat-history');
 const userInput = document.getElementById('user-input');
@@ -383,110 +436,254 @@ const sendBtn = document.getElementById('send-btn');
 const newChatBtn = document.getElementById('new-chat-btn');
 const thinkingIndicator = document.getElementById('thinking-indicator');
 
-function addChatBubble(message, isUser = true) {
-    const bubbleType = isUser ? 'user' : 'model';
-    const icon = isUser ? '👤' : '🤖';
-    const bgClass = isUser ? 'bg-[#d97706] text-white' : 'bg-white text-gray-800 border border-gray-200';
-    
-    const wrap = document.createElement('div');
-    wrap.className = `flex items-start space-x-2 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`;
-    
-    const bubble = document.createElement('div');
-    bubble.className = `chat-bubble chat-bubble-${bubbleType} ${bgClass} p-3 rounded-lg max-w-lg relative shadow-sm`;
-    bubble.innerHTML = `<p>${message.replace(/\n/g, '<br>')}</p>`;
-    
-    wrap.innerHTML = `<span class="text-2xl">${icon}</span>`;
-    wrap.appendChild(bubble);
-    
-    chatHistoryEl.appendChild(wrap);
-    chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+const uploadImgBtn = document.getElementById('upload-img-btn');
+const imageInput = document.getElementById('image-input');
+const imagePreviewWrapper = document.getElementById('image-preview-wrapper');
+const imagePreview = document.getElementById('image-preview');
+const imageFileName = document.getElementById('image-file-name');
+const removeImageBtn = document.getElementById('remove-image-btn');
+
+/* Helper: Convert Markdown bold/linebreaks to clean HTML formatting */
+function formatMarkdown(text) {
+  if (!text) return '';
+  let formatted = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1 py-0.5 rounded text-amber-800 font-mono text-xs">$1</code>')
+    .replace(/\n/g, '<br>');
+  return formatted;
+}
+
+function addChatBubble(message, isUser = true, imageDataUrl = null) {
+  const bubbleType = isUser ? 'user' : 'model';
+  const icon = isUser ? '👤' : '🤖';
+  const bgClass = isUser ? 'bg-[#d97706] text-white' : 'bg-white text-gray-800 border border-gray-200';
+  
+  const wrap = document.createElement('div');
+  wrap.className = `flex items-start space-x-2 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`;
+  
+  const bubble = document.createElement('div');
+  bubble.className = `chat-bubble chat-bubble-${bubbleType} ${bgClass} p-3 rounded-lg max-w-lg relative shadow-sm text-sm md:text-base`;
+  
+  let contentHtml = '';
+  if (imageDataUrl) {
+    contentHtml += `<div class="mb-2"><img src="${imageDataUrl}" class="uploaded-img-thumb shadow-md" alt="รูปบาลีที่ส่ง"></div>`;
+  }
+  if (message) {
+    contentHtml += `<div class="leading-relaxed">${formatMarkdown(message)}</div>`;
+  }
+  
+  bubble.innerHTML = contentHtml;
+  
+  wrap.innerHTML = `<span class="text-2xl">${icon}</span>`;
+  wrap.appendChild(bubble);
+  
+  chatHistoryEl.appendChild(wrap);
+  chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
 }
 
 function addChatError(message) {
-    const w = document.createElement('div');
-    w.className = 'flex justify-center my-2';
-    w.innerHTML = `<span class="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1 rounded-full">${message}</span>`;
-    chatHistoryEl.appendChild(w);
-    chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+  const w = document.createElement('div');
+  w.className = 'flex justify-center my-2';
+  w.innerHTML = `<span class="bg-red-100 text-red-700 text-xs font-semibold px-3 py-1.5 rounded-full shadow-xs border border-red-200">${message}</span>`;
+  chatHistoryEl.appendChild(w);
+  chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
 }
 
-function setThinking(on) {
-    thinkingIndicator.classList.toggle('hidden', !on);
-    if (on) chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+function setThinking(on, label = "กำลังสแกนวิเคราะห์ภาษาบาลี...") {
+  document.getElementById('thinking-text').textContent = label;
+  thinkingIndicator.classList.toggle('hidden', !on);
+  if (on) chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+}
+
+/* Handle Image File Selection */
+uploadImgBtn.addEventListener('click', () => {
+  imageInput.click();
+});
+
+imageInput.addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    addChatError('กรุณาเลือกไฟล์รูปภาพเท่านั้น');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function(event) {
+    const dataUrl = event.target.result;
+    // Split mime and base64 string
+    const parts = dataUrl.split(',');
+    attachedImageMimeType = file.type || 'image/jpeg';
+    attachedImageBase64 = parts[1];
+
+    // Display Preview
+    imagePreview.src = dataUrl;
+    imageFileName.textContent = file.name;
+    imagePreviewWrapper.classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+});
+
+removeImageBtn.addEventListener('click', () => {
+  clearImageAttachment();
+});
+
+function clearImageAttachment() {
+  attachedImageBase64 = null;
+  attachedImageMimeType = null;
+  imageInput.value = '';
+  imagePreview.src = '';
+  imagePreviewWrapper.classList.add('hidden');
+}
+
+async function callGeminiAPI(payload, retries = 3, delay = 1000) {
+  const apiKey = ""; // Built-in runtime API Key injection
+  const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.status === 429) { // Rate limit
+        await new Promise(r => setTimeout(r, delay * Math.pow(2, attempt)));
+        continue;
+      }
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.error?.message || `API Error HTTP ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (err) {
+      if (attempt === retries - 1) throw err;
+      await new Promise(r => setTimeout(r, delay * Math.pow(2, attempt)));
+    }
+  }
 }
 
 async function handleSend() {
-    const message = (userInput.value || '').trim();
-    if (!message) return;
+  const textMessage = (userInput.value || '').trim();
+  const hasImage = !!attachedImageBase64;
 
-    addChatBubble(message, true);
-    userInput.value = '';
-    setThinking(true);
-    sendBtn.disabled = true;
+  if (!textMessage && !hasImage) return;
 
-    chatHistory.push({ role: "user", parts: [{ text: message }] });
+  // Prepare local copy of image for user bubble display
+  const currentImgDataUrl = hasImage ? `data:${attachedImageMimeType};base64,${attachedImageBase64}` : null;
+  const currentImgBase64 = attachedImageBase64;
+  const currentImgMime = attachedImageMimeType;
 
-    try {
-        const response = await fetch(BACKEND_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ history: chatHistory }) 
-        });
+  // Add User bubble to Chat UI
+  addChatBubble(textMessage || (hasImage ? "📷 โปรดสแกนและแปลภาษาบาลีในรูปภาพนี้" : ""), true, currentImgDataUrl);
 
-        if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.error || `Server error: ${response.status}`);
-        }
+  // Clear inputs immediately for smooth UX
+  userInput.value = '';
+  clearImageAttachment();
 
-        const data = await response.json(); 
-        const aiReply = data.reply;
+  setThinking(true, hasImage ? "กำลังสแกนอ่านภาพและวิเคราะห์บาลี..." : "กำลังค้นหาและแปลภาษาบาลี...");
+  sendBtn.disabled = true;
 
-        chatHistory.push({ role: "model", parts: [{ text: aiReply }] });
-        setThinking(false);
-        addChatBubble(aiReply, false);
+  // Build Parts for current user turn
+  const parts = [];
+  if (textMessage) {
+    parts.push({ text: textMessage });
+  } else if (hasImage) {
+    parts.push({ text: "โปรดสแกนอ่านข้อความบาลีในภาพนี้ แปลโดยพยัญชนะ แปลโดยอรรถ พร้อมทั้งอธิบายไวยากรณ์และศัพท์สำคัญให้อย่างละเอียด" });
+  }
 
-    } catch (err) {
-        console.error("Fetch Error:", err);
-        setThinking(false);
-        addChatError(`เกิดข้อผิดพลาด: ${err.message}`);
-        chatHistory.pop();
-    } finally {
-        sendBtn.disabled = false;
+  if (hasImage) {
+    parts.push({
+      inlineData: {
+        mimeType: currentImgMime,
+        data: currentImgBase64
+      }
+    });
+  }
+
+  // Append to conversation history
+  conversationHistory.push({
+    role: "user",
+    parts: parts
+  });
+
+  // Construct Gemini Request Payload
+  const payload = {
+    contents: conversationHistory,
+    systemInstruction: {
+      parts: [{ text: SYSTEM_INSTRUCTION_TEXT }]
     }
+  };
+
+  try {
+    const result = await callGeminiAPI(payload);
+    const candidate = result.candidates?.[0];
+    const aiReplyText = candidate?.content?.parts?.[0]?.text;
+
+    if (!aiReplyText) {
+      throw new Error("ไม่ได้รับข้อมูลการตอบกลับจากระบบ AI");
+    }
+
+    // Save Model turn to conversation history
+    conversationHistory.push({
+      role: "model",
+      parts: [{ text: aiReplyText }]
+    });
+
+    setThinking(false);
+    addChatBubble(aiReplyText, false);
+
+  } catch (err) {
+    console.error("Gemini API Error:", err);
+    setThinking(false);
+    addChatError(`เกิดข้อผิดพลาดในการแปล: ${err.message || 'กรุณาลองใหม่อีกครั้ง'}`);
+    // Rollback last user message on failure so state stays consistent
+    conversationHistory.pop();
+  } finally {
+    sendBtn.disabled = false;
+  }
 }
 
 sendBtn.addEventListener('click', handleSend);
 userInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') handleSend();
+  if (e.key === 'Enter') handleSend();
 });
 
 newChatBtn.addEventListener('click', () => {
-    chatHistory = [SYSTEM_PROMPT, SYSTEM_ACK];
-    chatHistoryEl.innerHTML = `
-        <div class="flex items-start space-x-2">
-        <span class="text-2xl">🤖</span>
-        <div class="chat-bubble chat-bubble-model bg-white text-gray-800 p-3 rounded-lg max-w-lg relative border border-gray-200 shadow-sm">
-            <p>เจริญพร เริ่มบทสนทนาธรรมใหม่ได้เลย</p>
-        </div>
-        </div>`;
-    userInput.value = '';
-    setThinking(false);
+  conversationHistory = [];
+  clearImageAttachment();
+  chatHistoryEl.innerHTML = `
+    <div class="flex items-start space-x-2">
+      <span class="text-2xl">🤖</span>
+      <div class="chat-bubble chat-bubble-model bg-white text-gray-800 p-3 rounded-lg max-w-lg relative border border-gray-200 shadow-sm">
+        <p class="m-0">เจริญพร เริ่มบทสนทนาธรรมใหม่แล้ว... พิมพ์บาลี หรือแนบรูปภาพบาลีเพื่อสแกนแปลได้เลย</p>
+      </div>
+    </div>`;
+  userInput.value = '';
+  setThinking(false);
 });
 
-// Modal Control
+// Modal Controls
 const fabToggle = document.getElementById('fab-chat-toggle');
 const chatModal = document.getElementById('chatbot-modal');
 const chatbotCloseBtn = document.getElementById('chatbot-close-btn');
 
 fabToggle.addEventListener('click', () => {
-    chatModal.classList.remove('chatbot-hidden');
-    fabToggle.style.opacity = '0';
+  chatModal.classList.remove('chatbot-hidden');
+  fabToggle.style.opacity = '0';
 });
 chatbotCloseBtn.addEventListener('click', () => {
-    chatModal.classList.add('chatbot-hidden');
-    fabToggle.style.opacity = '1';
+  chatModal.classList.add('chatbot-hidden');
+  fabToggle.style.opacity = '1';
 });
 </script>
-
 </body>
 </html>
